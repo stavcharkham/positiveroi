@@ -1,0 +1,17 @@
+[
+  {
+    "session_id": "sess-1",
+    "prompt": "/report-tool run the weekly numbers",
+    "expected_key": "hook:sess-1:202b153c91349ce4"
+  },
+  {
+    "session_id": "abc123",
+    "prompt": "/positiveroi:register-tool",
+    "expected_key": "hook:abc123:3b6330092aed17ad"
+  },
+  {
+    "session_id": "sess-2",
+    "prompt": "run the café digest ☕",
+    "expected_key": "hook:sess-2:a68cab23df160cdf"
+  }
+]

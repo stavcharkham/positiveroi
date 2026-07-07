@@ -173,6 +173,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.2
       esbuild:
         specifier: ^0.25.0
         version: 0.25.12
@@ -185,6 +188,9 @@ importers:
 
   packages/sdk:
     devDependencies:
+      '@positiveroi/core':
+        specifier: workspace:*
+        version: link:../core
       typescript:
         specifier: ^5.8.0
         version: 5.9.3

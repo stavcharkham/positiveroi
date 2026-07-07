@@ -1,0 +1,6 @@
+{
+  "name": "positiveroi",
+  "version": "0.1.0",
+  "description": "Measure the time your AI tools actually save — runs logged automatically to PositiveROI.",
+  "author": { "name": "Stav Charkham" }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "positiveroi",
+  "owner": { "name": "Stav Charkham" },
+  "plugins": [
+    {
+      "name": "positiveroi",
+      "source": "./packages/claude-plugin",
+      "description": "Measure the time your AI tools actually save."
+    }
+  ]
+}

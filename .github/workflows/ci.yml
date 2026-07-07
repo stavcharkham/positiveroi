@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # pnpm version comes from the "packageManager" field in package.json (pnpm 11).
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Turbo check (lint + typecheck + test + build)
+        run: pnpm check
+
+  db:
+    name: Database suite (migrations from zero + RLS isolation)
+    runs-on: ubuntu-latest
+    # TODO(ci): harden and remove continue-on-error. Wiring env from
+    # `supabase status` on top of a db-only stack is brittle, and the web
+    # integration tests this job runs land from a parallel build track.
+    # This job is the project's standing security review (RLS isolation,
+    # idempotency, key auth); it must become a required check once green.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Ensure supabase config exists
+        run: '[ -f supabase/config.toml ] || supabase init'
+      - name: Start local database
+        run: supabase db start
+      - name: Apply migrations in order with psql
+        run: |
+          DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          for f in supabase/migrations/*.sql; do
+            echo "== applying $f"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+      - name: Run web integration tests against the local database
+        run: |
+          # Export whatever the local stack reports (API_URL, ANON_KEY,
+          # SERVICE_ROLE_KEY, DB_URL); fall back to the CLI defaults.
+          eval "$(supabase status -o env 2>/dev/null || true)"
+          export NEXT_PUBLIC_SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="${ANON_KEY:-}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-}"
+          export DATABASE_URL="${DB_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}"
+          pnpm --filter web test
+
+  plugin:
+    name: Claude plugin tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run plugin tests (node test runner, no deps)
+        run: node --test packages/claude-plugin/test/

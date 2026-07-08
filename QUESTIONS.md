@@ -9,7 +9,7 @@ Magic-link login works without this, so it's not launch-blocking, but Google log
 1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a project (name: `PositiveROI`).
 2. Left menu → **APIs & Services → OAuth consent screen**. Choose **External**, app name `PositiveROI`, add your support email, save through the steps (no scopes to add).
 3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**. Application type: **Web application**.
-4. Under **Authorized redirect URIs**, add: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback` (the project ref is in your Supabase project URL; I can paste the exact string when you're ready).
+4. Under **Authorized redirect URIs**, add exactly: `https://mzkvhihqykzeecbwoigu.supabase.co/auth/v1/callback`
 5. Copy the **Client ID** and **Client Secret**.
 6. In Supabase: **Authentication → Providers → Google** → enable, paste both values, save.
 
@@ -26,7 +26,10 @@ If the Vercel connector can't create/link the production project from this side,
 
 ## 3. SUPABASE_SERVICE_ROLE_KEY handoff
 
-The service-role key bypasses row-level security, so it should pass through as few hands as possible. Grab it from Supabase → **Project Settings → API → service_role**, and paste it directly into Vercel's environment variables (Production). Don't put it in a chat message or a file in the repo.
+The service-role key bypasses row-level security, so it should pass through as few hands as possible. Grab it from Supabase → **Project Settings → API → service_role**, then put it in two places — never in chat, never in a committed file:
+
+1. **Vercel** → Project → Settings → Environment Variables → `SUPABASE_SERVICE_ROLE_KEY` (Production).
+2. **Locally**: open `apps/web/.env.local` (gitignored) and fill the empty `SUPABASE_SERVICE_ROLE_KEY=` line. This is also what turns on the live integration test suite (`pnpm -F web test` — 7 currently-skipped tests activate automatically) and lets the app run fully on your machine.
 
 ## Later (not blocking)
 

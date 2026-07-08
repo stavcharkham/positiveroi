@@ -21,6 +21,25 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Technical decisions (Claude)
 
+**2026-07-08, build execution** (deviations and refinements recorded while the tracks were built)
+
+- `verifyApiKey` also returns `createdBy` — POST /api/v1/tools needs it as the tool's `owner_id`.
+- Extra RPC `roi_tool_stats(ws)` added in migration 0008 — the read-scope tools list needs per-tool rollups and supabase-js cannot GROUP BY.
+- `roi_gone_quiet` filters `status = 'active'` — archived tools should not nag.
+- Rate limiting fails open if the counter RPC errors — a counting outage must never take ingestion down.
+- `resolvePeriod` accepts one-sided from/to (missing from → workspace creation, missing to → now); the `to` day is inclusive.
+- `middleware.ts` kept despite Next 16 deprecation warning (rename to `proxy.ts` is a later cleanup, works today).
+- Plugin hook queues only on network error / 5xx; 4xx responses are dropped — server-rejected events can never succeed later and would poison the 20-event drain window.
+- Hook trigger matching requires a word boundary after `/<trigger>` — plain startsWith would let trigger `report` claim `/report-toolbox` and mis-credit tools.
+- `packages/claude-plugin/.mcp.json` ships in the plugin (spec gap) — without it Claude Code never launches the vendored MCP server.
+- Plugin tests carry a `test/index.js` shim: Node 24 treats a bare directory arg to `--test` as an entry module.
+- Google login button renders only when `NEXT_PUBLIC_AUTH_GOOGLE=true` — self-hosters without an OAuth client never see a broken button.
+- Public badge SVG signs "· PositiveROI" (platform brand), not "Multiplier" — the badge vocabulary stays reserved for the builder tier.
+- Hosted Supabase migrations were applied via MCP as three combined statements plus 0008; the numbered files in `supabase/migrations/` stay canonical for self-hosters and CI.
+- Docs JSON examples are validated against the real zod schemas from `@positiveroi/core` (not hand-written), and Receipt strings in docs are literal `methodologyReceipt()` output.
+
+
+
 **2026-07-08, architecture** (details in [docs/architecture.md](docs/architecture.md))
 
 - One Next.js App Router app serves dashboard, public pages, and all API routes; one Supabase Postgres; no queues, cron, or edge functions in v1.

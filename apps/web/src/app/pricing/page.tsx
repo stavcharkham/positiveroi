@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 const UPGRADE_MAILTO =
-  "mailto:stavchark@gmail.com?subject=PositiveROI%20Team%20upgrade";
+  "mailto:stav@verticalbuilders.dev?subject=PositiveROI%20Team%20upgrade";
 
 interface Plan {
   name: string;
@@ -85,7 +85,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What counts as a builder?",
-    a: "A member who owns tools that log runs. Teammates who only view dashboards don't count against the limit.",
+    a: "The person who built the tools. Teammates who only view dashboards don't count against the limit.",
   },
   {
     q: "Is the math different on paid plans?",

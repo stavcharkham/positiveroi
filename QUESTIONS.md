@@ -2,57 +2,42 @@
 
 Blocking items first. Each has the exact steps so it can be done in one sitting.
 
-## 1. SUPABASE_SERVICE_ROLE_KEY handoff (blocks live verification)
+## 1. Credited-number edit bounds (blocks the adjustments batch)
 
-The service-role key bypasses row-level security, so it should pass through as few hands as possible. Grab it from Supabase → **Project Settings → API → service_role**, then put it in two places — never in chat, never in a committed file:
+Decided 2026-07-10: the final credited minutes/run is editable — the Undercount becomes a suggested default with an explanation, not a lock. One sub-decision remains: how far can a builder move the number? Options presented in chat (cap at baseline with honest labeling above the suggestion, downward-only, or fully free).
 
-1. **Locally**: open `apps/web/.env.local` (gitignored) and fill the empty `SUPABASE_SERVICE_ROLE_KEY=` line. This turns on the live integration test suite (7 currently-skipped tests) and lets the app run fully on your machine.
-2. **Vercel** (once the project exists, see #2) → Project → Settings → Environment Variables → `SUPABASE_SERVICE_ROLE_KEY` (Production).
+## 2. Google OAuth client (optional — deferred by Stav 2026-07-10)
 
-## 2. Vercel production hookup (blocks release)
+Magic-link login works without it. Steps preserved for later:
 
-1. [vercel.com/new](https://vercel.com/new) → import `stavcharkham/positiveroi`.
-2. Root directory: `apps/web`. Create the project; no need to configure anything else.
-3. Claude will hand you the exact environment-variable list to paste (it includes `HOSTED_ADMIN_EMAILS=stav@verticalbuilders.dev,stavchark@gmail.com`).
-4. The .vercel.app URL it assigns is our production URL for now.
+1. [console.cloud.google.com](https://console.cloud.google.com) → create project `PositiveROI`.
+2. **APIs & Services → OAuth consent screen** → External, app name `PositiveROI`, support email, save through (no scopes).
+3. **Credentials → Create Credentials → OAuth client ID** → Web application.
+4. Authorized redirect URI, exactly: `https://mzkvhihqykzeecbwoigu.supabase.co/auth/v1/callback`
+5. Copy Client ID + Secret → Supabase **Authentication → Providers → Google** → enable, paste, save.
 
-Alternative: authorize the Vercel connector in Claude settings and Claude does this step.
-
-## 3. Contact email for "Contact to upgrade" (pricing page)
-
-Currently points at stavchark@gmail.com because no product address exists. Pick one:
-- Keep Gmail (visible to the public)
-- **stav@verticalbuilders.dev (recommended)**
-- Hold the upgrade button until positiveroi.dev exists and has a real mailbox
-
-## 4. Confirm the pricing FAQ definition of a "builder"
-
-Draft copy says: "a member who owns tools that log runs." This is what "Free up to 5 builders" counts. Confirm or reword.
-
-## 5. Create the Google OAuth client (optional — unblocks Google login)
-
-Magic-link login works without this, so it's not launch-blocking, but Google login is the smoother path for teams.
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) and create a project (name: `PositiveROI`).
-2. Left menu → **APIs & Services → OAuth consent screen**. Choose **External**, app name `PositiveROI`, add your support email, save through the steps (no scopes to add).
-3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**. Application type: **Web application**.
-4. Under **Authorized redirect URIs**, add exactly: `https://mzkvhihqykzeecbwoigu.supabase.co/auth/v1/callback`
-5. Copy the **Client ID** and **Client Secret**.
-6. In Supabase: **Authentication → Providers → Google** → enable, paste both values, save.
-
-Nothing in the code changes; the login page shows the Google button automatically once the provider is on.
+The login page shows the Google button automatically once the provider is on; no code change.
 
 ## Later (not blocking)
 
-- **Buy positiveroi.dev** and point it at the Vercel project (Vercel → Domains walks you through it).
-- **Create the npm org** `positiveroi` (or confirm `@positiveroi` scope availability) so core/sdk/mcp-server can publish; the release workflow is already written and just needs enabling.
-- **Stripe** account + decision on when the $29 tier gets enforced (v1 pricing is copy only).
+- **Buy positiveroi.dev** and point it at the Vercel project.
+- **Create the npm org** `positiveroi` (or confirm `@positiveroi` scope) so core/sdk/mcp-server can publish; release workflow ready, just disabled.
+- **Stripe** account + when the $29 tier gets enforced (v1 pricing is copy only).
 
-## Answered 2026-07-10 (recorded for the log)
+## Resolved (log)
 
-- Builders CAN edit the baseline before approving (wizard already works this way); after creation it stays lead/admin-only, audited.
-- MCP server for building agents: exists (`register_tool`, `log_run`, `list_tools`, `get_summary`).
-- API keys are workspace-level, many allowed; attribution is per tool owner. Confirmed OK.
+**2026-07-10, second review round:**
+- Service role key: pasted locally by Stav; all 54 tests green including the 7 live-Supabase ones.
+- Vercel: Stav authenticated the Vercel connector; Claude creates the project at release.
+- Upgrade contact email: stav@verticalbuilders.dev (applied to pricing page + settings plan card).
+- "Builder" FAQ definition: "The person who built the tools." (applied).
+- Repo moved to `~/Desktop/cool-projects/positiveroi` at Stav's request.
+- API keys become **user-level**: every member manages their own keys, admins see all; offboarding = revoke that person's keys, nobody else rotates anything.
+- MCP gets a `list_metrics` tool so building agents can discover the admin-defined business KPIs before logging runs.
+
+**2026-07-10, first round:**
+- Builders CAN edit the baseline before approving (wizard already works this way).
+- MCP server for building agents exists (`register_tool`, `log_run`, `list_tools`, `get_summary`).
 - Leaderboards rank by credited (undercounted) hours per builder / per tool. Confirmed.
-- Time ranges must be: last 7 / last 30 / last 90 days / custom range (queued: rename quarter→90 days, add custom picker).
-- `/admin` allowed emails: stav@verticalbuilders.dev, stavchark@gmail.com only.
+- Time ranges: last 7 / last 30 / last 90 days / custom range (queued: rename quarter→90 days, add custom picker).
+- `/admin` allowed emails: stav@verticalbuilders.dev, stavchark@gmail.com (set in local env; goes to Vercel env at release).

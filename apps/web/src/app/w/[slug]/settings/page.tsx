@@ -48,7 +48,7 @@ function PlanCard() {
       </CardHeader>
       <CardContent className="pt-4">
         <Button asChild variant="secondary" size="sm">
-          <a href="mailto:stavchark@gmail.com?subject=PositiveROI%20upgrade">
+          <a href="mailto:stav@verticalbuilders.dev?subject=PositiveROI%20upgrade">
             Contact to upgrade
           </a>
         </Button>

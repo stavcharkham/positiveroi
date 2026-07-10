@@ -47,7 +47,23 @@ export interface ApiKeyListItem {
   revoked: boolean;
 }
 
-function KeysPanel({ slug, keys }: { slug: string; keys: ApiKeyListItem[] }) {
+/** Another member's keys, labeled with their display name. */
+export interface KeyGroup {
+  owner: string;
+  keys: ApiKeyListItem[];
+}
+
+function KeysPanel({
+  slug,
+  isAdmin,
+  myKeys,
+  otherGroups,
+}: {
+  slug: string;
+  isAdmin: boolean;
+  myKeys: ApiKeyListItem[];
+  otherGroups: KeyGroup[];
+}) {
   const router = useRouter();
   const [createOpen, setCreateOpen] = React.useState(false);
   const [revokeTarget, setRevokeTarget] = React.useState<ApiKeyListItem | null>(
@@ -59,10 +75,10 @@ function KeysPanel({ slug, keys }: { slug: string; keys: ApiKeyListItem[] }) {
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
           <div className="flex flex-col gap-1">
-            <CardTitle>API keys</CardTitle>
+            <CardTitle>Your API keys</CardTitle>
             <CardDescription>
-              Ingest keys log runs. Read keys pull stats. Rotate by creating a
-              new key, switching, then revoking the old one.
+              Ingest keys log runs. Rotate by creating a new key, switching,
+              then revoking the old one.
             </CardDescription>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)} className="shrink-0">
@@ -70,7 +86,7 @@ function KeysPanel({ slug, keys }: { slug: string; keys: ApiKeyListItem[] }) {
           </Button>
         </CardHeader>
         <CardContent className="pt-4">
-          {keys.length === 0 ? (
+          {myKeys.length === 0 ? (
             <EmptyState
               icon={KeyRound}
               title="No API keys yet"
@@ -82,7 +98,7 @@ function KeysPanel({ slug, keys }: { slug: string; keys: ApiKeyListItem[] }) {
             </EmptyState>
           ) : (
             <ul className="divide-y divide-border">
-              {keys.map((key) => (
+              {myKeys.map((key) => (
                 <KeyRow
                   key={key.id}
                   apiKey={key}
@@ -94,8 +110,52 @@ function KeysPanel({ slug, keys }: { slug: string; keys: ApiKeyListItem[] }) {
         </CardContent>
       </Card>
 
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>All workspace keys</CardTitle>
+            <CardDescription>
+              Every other member&apos;s keys, grouped by owner. You can revoke
+              any of them.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {otherGroups.length === 0 ? (
+              <p className="text-sm text-foreground-muted">
+                No one else has created a key yet.
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {otherGroups.map((group, i) => (
+                  <div key={`${group.owner}-${i}`}>
+                    <p className="pb-1 text-xs font-medium text-foreground-secondary">
+                      {group.owner}
+                    </p>
+                    <ul className="divide-y divide-border">
+                      {group.keys.map((key) => (
+                        <KeyRow
+                          key={key.id}
+                          apiKey={key}
+                          onRevoke={() => setRevokeTarget(key)}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <p className="text-xs text-foreground-muted">
+        Keys belong to you. When someone leaves, revoke their keys and nothing
+        else changes.
+      </p>
+
       <CreateKeyDialog
         slug={slug}
+        canCreateRead={isAdmin}
         open={createOpen}
         onOpenChange={(open) => {
           setCreateOpen(open);
@@ -163,10 +223,12 @@ function KeyRow({
 
 function CreateKeyDialog({
   slug,
+  canCreateRead,
   open,
   onOpenChange,
 }: {
   slug: string;
+  canCreateRead: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -246,28 +308,35 @@ function CreateKeyDialog({
                 autoFocus
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="key-scope">Scope</Label>
-              <Select
-                value={scope}
-                onValueChange={(v) => setScope(v as "ingest" | "read")}
-              >
-                <SelectTrigger id="key-scope" aria-label="Key scope">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ingest">
-                    Ingest — tools log runs
-                  </SelectItem>
-                  <SelectItem value="read">
-                    Read — pull stats and reports
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+            {canCreateRead ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="key-scope">Scope</Label>
+                <Select
+                  value={scope}
+                  onValueChange={(v) => setScope(v as "ingest" | "read")}
+                >
+                  <SelectTrigger id="key-scope" aria-label="Key scope">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ingest">
+                      Ingest — tools log runs
+                    </SelectItem>
+                    <SelectItem value="read">
+                      Read — pull stats and reports
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-foreground-muted">
+                  An ingest key can never read money or per-builder numbers.
+                </p>
+              </div>
+            ) : (
               <p className="text-xs text-foreground-muted">
-                An ingest key can never read money or per-builder numbers.
+                This creates an ingest key. It logs runs and can never read
+                money or per-builder numbers. Read keys are created by admins.
               </p>
-            </div>
+            )}
             {error && (
               <p className="text-[0.8125rem] text-destructive">{error}</p>
             )}

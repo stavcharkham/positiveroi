@@ -51,6 +51,31 @@ function formatMinutes(m: number): string {
   return Number.isInteger(m) ? String(m) : m.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 }
 
+/**
+ * The credited minutes a run snapshots: the builder-set override when one is
+ * set, else the suggested Undercount. The override layer lives entirely here
+ * and in the DB coalesce — the suggested-value machinery stays frozen.
+ */
+export function effectiveMinutesSavedPerRun(
+  suggested: number,
+  override: number | null | undefined,
+): number {
+  return override ?? suggested;
+}
+
+/**
+ * Normalize a builder's requested credit against the suggestion: a number
+ * equal to the suggestion is no override at all (stored as null), so
+ * "builder-set" is only ever shown on numbers that actually differ.
+ */
+export function normalizeCreditOverride(
+  suggested: number,
+  requested: number | null | undefined,
+): number | null {
+  if (requested === null || requested === undefined) return null;
+  return requested === suggested ? null : requested;
+}
+
 /** Progress toward the Multiplier badge, from trailing-30-day credited hours. */
 export function multiplierProgress(hours30d: number): number {
   if (!Number.isFinite(hours30d) || hours30d <= 0) return 0;

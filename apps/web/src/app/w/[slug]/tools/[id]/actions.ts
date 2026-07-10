@@ -5,6 +5,8 @@ import { z } from "zod";
 import {
   RAW_ESTIMATE_MAX_DASHBOARD,
   computeMinutesSavedPerRun,
+  effectiveMinutesSavedPerRun,
+  normalizeCreditOverride,
 } from "@positiveroi/core";
 import { requireMember } from "@/lib/guards";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -98,6 +100,108 @@ export async function updateBaselineAction(
       .eq("workspace_id", workspace.id)
       .eq("id", toolId);
     return { ok: false, error: "Could not save the baseline. Try again." };
+  }
+
+  revalidatePath(`/w/${workspaceSlug}/tools/${toolId}`);
+  revalidatePath(`/w/${workspaceSlug}/tools`);
+  return { ok: true, creditedPerRun };
+}
+
+// ---------------------------------------------------------------------------
+// Credit override — the builder-set number that replaces the suggestion
+// ---------------------------------------------------------------------------
+
+const creditInputSchema = z.object({
+  /** null = back to the suggested Undercount. */
+  creditMinutes: z
+    .number()
+    .gt(0)
+    .max(RAW_ESTIMATE_MAX_DASHBOARD)
+    .refine((v) => Math.abs(v * 100 - Math.round(v * 100)) < 1e-6, {
+      message: "at most 2 decimal places",
+    })
+    .nullable(),
+});
+
+export interface UpdateCreditResult {
+  ok: boolean;
+  error?: string;
+  /** The credited minutes new runs will snapshot. */
+  creditedPerRun?: number;
+}
+
+/**
+ * Set, change, or clear the builder-set credit. The tool's owner edits their
+ * own; leads and admins edit any. Every change writes a credit_history row —
+ * same accountability as the baseline.
+ */
+export async function updateCreditAction(
+  workspaceSlug: string,
+  toolId: string,
+  input: unknown,
+): Promise<UpdateCreditResult> {
+  const { user, workspace, member } = await requireMember(workspaceSlug);
+  if (!UUID_RE.test(toolId)) return { ok: false, error: "Tool not found." };
+
+  const parsed = creditInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: `The credit must be above 0 and at most ${RAW_ESTIMATE_MAX_DASHBOARD} minutes per run.`,
+    };
+  }
+
+  const admin = getAdminClient();
+  const { data: tool } = await admin
+    .from("tools")
+    .select("id, owner_id, minutes_saved_per_run, minutes_saved_override")
+    .eq("workspace_id", workspace.id)
+    .eq("id", toolId)
+    .maybeSingle();
+  if (!tool) return { ok: false, error: "Tool not found." };
+
+  if (member.role === "builder" && tool.owner_id !== user.id) {
+    return {
+      ok: false,
+      error: "Only the tool's owner, a lead, or an admin can change its credit.",
+    };
+  }
+
+  const suggested = Number(tool.minutes_saved_per_run);
+  const oldOverride =
+    tool.minutes_saved_override === null ? null : Number(tool.minutes_saved_override);
+  const newOverride = normalizeCreditOverride(suggested, parsed.data.creditMinutes);
+  const creditedPerRun = effectiveMinutesSavedPerRun(suggested, newOverride);
+
+  if (oldOverride === newOverride) return { ok: true, creditedPerRun };
+
+  const { error: updateError } = await admin
+    .from("tools")
+    .update({
+      minutes_saved_override: newOverride,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("workspace_id", workspace.id)
+    .eq("id", toolId);
+  if (updateError) {
+    return { ok: false, error: "Could not save the credit. Try again." };
+  }
+
+  const { error: historyError } = await admin.from("credit_history").insert({
+    workspace_id: workspace.id,
+    tool_id: toolId,
+    changed_by: user.id,
+    old_value: oldOverride,
+    new_value: newOverride,
+  });
+  if (historyError) {
+    // Restore the invariant: no credit change without its audit row.
+    await admin
+      .from("tools")
+      .update({ minutes_saved_override: oldOverride })
+      .eq("workspace_id", workspace.id)
+      .eq("id", toolId);
+    return { ok: false, error: "Could not save the credit. Try again." };
   }
 
   revalidatePath(`/w/${workspaceSlug}/tools/${toolId}`);

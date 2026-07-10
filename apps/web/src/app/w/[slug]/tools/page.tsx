@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Wrench } from "lucide-react";
+import { effectiveMinutesSavedPerRun } from "@positiveroi/core";
 import { leaderboards, timeseries, toolStats } from "@/lib/aggregates";
 import { requireMember } from "@/lib/guards";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -33,6 +34,7 @@ type DirectoryTool = Pick<
   | "type"
   | "status"
   | "minutes_saved_per_run"
+  | "minutes_saved_override"
   | "created_at"
 >;
 
@@ -55,7 +57,7 @@ export default async function ToolsPage({
     admin
       .from("tools")
       .select(
-        "id, owner_id, name, slug, description, type, status, minutes_saved_per_run, created_at",
+        "id, owner_id, name, slug, description, type, status, minutes_saved_per_run, minutes_saved_override, created_at",
       )
       .eq("workspace_id", workspace.id)
       .order("name"),
@@ -176,7 +178,14 @@ export default async function ToolsPage({
                   </div>
 
                   <p className="hidden font-mono text-[0.8125rem] tabular-nums text-foreground-secondary md:block">
-                    {fmtNum(Number(tool.minutes_saved_per_run))}
+                    {fmtNum(
+                      effectiveMinutesSavedPerRun(
+                        Number(tool.minutes_saved_per_run),
+                        tool.minutes_saved_override === null
+                          ? null
+                          : Number(tool.minutes_saved_override),
+                      ),
+                    )}
                     <span className="text-foreground-muted"> min/run</span>
                   </p>
 

@@ -4,6 +4,16 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Product decisions (Stav)
 
+**2026-07-10** (first product review of the built app)
+
+- **The credited number is editable, fully free within the schema ceiling.** The Undercount becomes the suggested default with its rationale shown; the builder sets the final minutes/run at registration and later in the dashboard. Numbers differing from the suggestion are labeled "builder-set" on receipts and drill-downs — transparency replaces the lock. The 480-min ceiling (one 8h workday per run) stays as a typo/abuse bound, not a distrust of builders; raise it later if a real multi-day-per-run case appears. The suggested-value math (constants, generated column, round-trip test) stays frozen.
+- **API keys are user-level.** Every member creates and revokes their own keys; admins see all. Offboarding = revoke that person's keys; nobody else rotates anything. Read-scope key creation stays admin-only (read keys expose company-wide data).
+- **Agents must be able to discover business KPIs.** MCP gets `list_metrics` (backed by a definitions-only endpoint open to both key scopes); admins define KPIs in the dashboard.
+- **Time ranges everywhere: last 7 / last 30 / last 90 days / custom range** (quarter renamed and pinned to 90 days; custom from/to picker; all-time stays as default).
+- **/admin restricted to stav@verticalbuilders.dev and stavchark@gmail.com.**
+- **Upgrade contact: stav@verticalbuilders.dev.** Pricing FAQ "builder" definition: "The person who built the tools."
+- **Google OAuth deferred**; magic link is the launch auth. Repo lives at `~/Desktop/cool-projects/positiveroi` now.
+
 **2026-07-08**
 
 - **Platform, not a plugin generator.** Build the impact platform itself (capture + dashboards + methodology) rather than a tool that generates per-company tracking plugins. The value is the trusted number, not the scaffolding.

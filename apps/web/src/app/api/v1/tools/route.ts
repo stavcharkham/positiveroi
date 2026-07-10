@@ -1,5 +1,10 @@
 import type { NextRequest } from "next/server";
-import { methodologyReceipt, slugify, toolCreateApiSchema } from "@positiveroi/core";
+import {
+  effectiveMinutesSavedPerRun,
+  methodologyReceipt,
+  slugify,
+  toolCreateApiSchema,
+} from "@positiveroi/core";
 import { verifyApiKey } from "@/lib/api-keys";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { toolStats } from "@/lib/aggregates";
@@ -27,7 +32,16 @@ interface ToolListRow {
   type: string;
   status: string;
   minutes_saved_per_run: number;
+  minutes_saved_override: number | null;
   owner_id: string;
+}
+
+/** The credited minutes new runs snapshot — builder-set when one is set. */
+function creditedPerRun(row: ToolListRow): number {
+  return effectiveMinutesSavedPerRun(
+    Number(row.minutes_saved_per_run),
+    row.minutes_saved_override === null ? null : Number(row.minutes_saved_override),
+  );
 }
 
 /** GET — both scopes; read keys get the enriched shape. */
@@ -40,7 +54,9 @@ export async function GET(request: NextRequest) {
     const supabase = getAdminClient();
     const { data, error } = await supabase
       .from("tools")
-      .select("id, slug, name, type, status, minutes_saved_per_run, owner_id")
+      .select(
+        "id, slug, name, type, status, minutes_saved_per_run, minutes_saved_override, owner_id",
+      )
       .eq("workspace_id", key.workspaceId)
       .order("name");
     if (error) throw new Error(`tools list failed: ${error.message}`);
@@ -49,13 +65,13 @@ export async function GET(request: NextRequest) {
     if (key.scope === "ingest") {
       return Response.json(
         {
-          tools: rows.map(({ id, slug, name, type, status, minutes_saved_per_run }) => ({
-            id,
-            slug,
-            name,
-            type,
-            status,
-            minutes_saved_per_run,
+          tools: rows.map((t) => ({
+            id: t.id,
+            slug: t.slug,
+            name: t.name,
+            type: t.type,
+            status: t.status,
+            minutes_saved_per_run: creditedPerRun(t),
           })),
         },
         { headers },
@@ -89,7 +105,7 @@ export async function GET(request: NextRequest) {
             name: t.name,
             type: t.type,
             status: t.status,
-            minutes_saved_per_run: t.minutes_saved_per_run,
+            minutes_saved_per_run: creditedPerRun(t),
             owner_display_name: nameByUser.get(t.owner_id) ?? "",
             runs_30d: s?.runs30d ?? 0,
             hours_all_time: s?.hoursAllTime ?? 0,

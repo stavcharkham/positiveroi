@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { resolveConfig } from "./config.js";
 import { handleGetSummary, getSummaryDescription } from "./tools/getSummary.js";
+import { handleListMetrics, listMetricsDescription } from "./tools/listMetrics.js";
 import { handleListTools, listToolsDescription } from "./tools/listTools.js";
 import { handleLogRun, logRunDescription, logRunInput } from "./tools/logRun.js";
 import {
@@ -10,7 +11,7 @@ import {
 } from "./tools/registerTool.js";
 
 /**
- * Build the MCP server with the four PositiveROI tools. Config is resolved on
+ * Build the MCP server with the five PositiveROI tools. Config is resolved on
  * every call so a fresh ~/.positiveroi/config.json (written by impact-setup)
  * is picked up without restarting the server.
  */
@@ -33,6 +34,12 @@ export function buildServer(): McpServer {
     "list_tools",
     { description: listToolsDescription },
     async () => handleListTools(resolveConfig()),
+  );
+
+  server.registerTool(
+    "list_metrics",
+    { description: listMetricsDescription },
+    async () => handleListMetrics(resolveConfig()),
   );
 
   server.registerTool(

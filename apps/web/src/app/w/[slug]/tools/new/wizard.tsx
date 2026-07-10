@@ -15,6 +15,8 @@ import {
 import {
   RAW_ESTIMATE_MAX_DASHBOARD,
   TOOL_TYPES,
+  computeMinutesSavedPerRun,
+  normalizeCreditOverride,
   type ToolType,
 } from "@positiveroi/core";
 import { Button } from "@/components/ui/button";
@@ -30,7 +32,8 @@ import {
 import { Receipt } from "@/components/product/receipt";
 import { cn } from "@/lib/utils";
 import { BaselineField } from "../baseline-field";
-import { TOOL_TYPE_META } from "../tool-meta";
+import { CreditField } from "../credit-field";
+import { TOOL_TYPE_META, fmtNum } from "../tool-meta";
 import { createToolAction } from "./actions";
 import { CaptureStep } from "./capture-step";
 
@@ -71,6 +74,8 @@ function ToolWizard({
   const [type, setType] = React.useState<ToolType | null>(null);
   const [rawMinutes, setRawMinutes] = React.useState(15);
   const [highJudgment, setHighJudgment] = React.useState<boolean | null>(null);
+  /** Builder-edited credit; null = the suggestion, untouched. */
+  const [creditMinutes, setCreditMinutes] = React.useState<number | null>(null);
   const [creating, setCreating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [tool, setTool] = React.useState<{ id: string; slug: string } | null>(null);
@@ -78,10 +83,37 @@ function ToolWizard({
   const step1Valid = name.trim().length > 0 && type !== null;
   const step2Valid = rawMinutes > 0 && rawMinutes <= RAW_ESTIMATE_MAX_DASHBOARD;
 
+  // The suggestion the credit editor is prefilled with — defined once the
+  // baseline is valid and the judgment question is answered.
+  const suggested =
+    step2Valid && highJudgment !== null
+      ? computeMinutesSavedPerRun(rawMinutes, highJudgment)
+      : null;
+  const creditValid =
+    creditMinutes === null ||
+    (creditMinutes > 0 && creditMinutes <= RAW_ESTIMATE_MAX_DASHBOARD);
+  const overrideForDisplay =
+    suggested !== null && creditValid
+      ? (normalizeCreditOverride(suggested, creditMinutes) ?? undefined)
+      : undefined;
+
+  // Editing the inputs that feed the suggestion discards a stale override.
+  function changeRawMinutes(next: number) {
+    setRawMinutes(next);
+    setCreditMinutes(null);
+  }
+  function chooseJudgment(next: boolean) {
+    setHighJudgment(next);
+    setCreditMinutes(null);
+  }
+
   async function create() {
-    if (!type || highJudgment === null || creating) return;
+    if (!type || highJudgment === null || suggested === null || !creditValid || creating) {
+      return;
+    }
     setCreating(true);
     setError(null);
+    const override = normalizeCreditOverride(suggested, creditMinutes);
     const result = await createToolAction(workspaceSlug, {
       name: name.trim(),
       description: description.trim(),
@@ -89,6 +121,7 @@ function ToolWizard({
       raw_estimate_minutes: rawMinutes,
       high_judgment: highJudgment,
       owner_id: ownerId,
+      ...(override !== null ? { minutes_saved_override: override } : {}),
     });
     if (result.ok && result.toolId && result.toolSlug) {
       setTool({ id: result.toolId, slug: result.toolSlug });
@@ -153,7 +186,7 @@ function ToolWizard({
           {step === 1 && (
             <BaselineStep
               rawMinutes={rawMinutes}
-              setRawMinutes={setRawMinutes}
+              setRawMinutes={changeRawMinutes}
               onBack={() => setStep(0)}
               onNext={() => setStep(2)}
               valid={step2Valid}
@@ -162,7 +195,11 @@ function ToolWizard({
           {step === 2 && (
             <CutsStep
               highJudgment={highJudgment}
-              setHighJudgment={setHighJudgment}
+              setHighJudgment={chooseJudgment}
+              suggested={suggested}
+              creditMinutes={creditMinutes}
+              setCreditMinutes={setCreditMinutes}
+              creditValid={creditValid}
               onBack={() => setStep(1)}
               onCreate={create}
               creating={creating}
@@ -177,6 +214,7 @@ function ToolWizard({
               endpoint={endpoint}
               rawMinutes={rawMinutes}
               highJudgment={highJudgment === true}
+              overrideMinutes={overrideForDisplay}
             />
           )}
         </motion.div>
@@ -186,6 +224,7 @@ function ToolWizard({
             key={`${step === 2}-${highJudgment}`}
             rawMinutes={rawMinutes}
             highJudgment={highJudgment === true}
+            overrideMinutes={overrideForDisplay}
             animate={step === 2}
             closingLine={step >= 2 && highJudgment !== null}
           />
@@ -408,6 +447,10 @@ const JUDGMENT_EXAMPLES = [
 function CutsStep({
   highJudgment,
   setHighJudgment,
+  suggested,
+  creditMinutes,
+  setCreditMinutes,
+  creditValid,
   onBack,
   onCreate,
   creating,
@@ -415,6 +458,11 @@ function CutsStep({
 }: {
   highJudgment: boolean | null;
   setHighJudgment: (v: boolean) => void;
+  /** The suggested Undercount; null until baseline + judgment are answered. */
+  suggested: number | null;
+  creditMinutes: number | null;
+  setCreditMinutes: (v: number | null) => void;
+  creditValid: boolean;
   onBack: () => void;
   onCreate: () => void;
   creating: boolean;
@@ -489,13 +537,35 @@ function CutsStep({
         Why do we cut?
       </Link>
 
+      {suggested !== null && (
+        <div className="mt-5 border-t border-border pt-5">
+          <h3 className="text-[0.9375rem] font-semibold text-foreground">
+            Your credited minutes per run
+          </h3>
+          <p className="mt-1 text-sm text-foreground-secondary">
+            The suggestion is the Undercount on the receipt:{" "}
+            {fmtNum(suggested)} min. If you know better, set your own number.
+          </p>
+          <CreditField
+            suggested={suggested}
+            value={creditMinutes}
+            onChange={setCreditMinutes}
+            id="tool-credit"
+            className="mt-4"
+          />
+        </div>
+      )}
+
       {error && <p className="mt-3 text-[0.8125rem] text-destructive">{error}</p>}
 
       <div className="mt-6 flex justify-between">
         <Button variant="ghost" onClick={onBack} disabled={creating}>
           <ArrowLeft aria-hidden /> Back
         </Button>
-        <Button onClick={onCreate} disabled={highJudgment === null || creating}>
+        <Button
+          onClick={onCreate}
+          disabled={highJudgment === null || !creditValid || creating}
+        >
           {creating ? "Creating…" : "Create the tool"}
           {!creating && <ArrowRight aria-hidden />}
         </Button>

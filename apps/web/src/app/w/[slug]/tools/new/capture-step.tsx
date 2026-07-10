@@ -25,6 +25,8 @@ export interface CaptureStepProps {
   endpoint: string;
   rawMinutes: number;
   highJudgment: boolean;
+  /** Builder-set credit when it differs from the suggestion. */
+  overrideMinutes?: number;
 }
 
 /**
@@ -39,6 +41,7 @@ function CaptureStep({
   endpoint,
   rawMinutes,
   highJudgment,
+  overrideMinutes,
 }: CaptureStepProps) {
   const [firstRun, setFirstRun] = React.useState<FirstRunPayload | null>(null);
   const [testSent, setTestSent] = React.useState(false);
@@ -115,6 +118,7 @@ function CaptureStep({
             firstRun={firstRun}
             rawMinutes={rawMinutes}
             highJudgment={highJudgment}
+            overrideMinutes={overrideMinutes}
             toolPath={toolPath}
           />
         ) : (
@@ -138,6 +142,7 @@ function CaptureStep({
                 <Receipt
                   rawMinutes={rawMinutes}
                   highJudgment={highJudgment}
+                  overrideMinutes={overrideMinutes}
                   isTest
                   animate
                 />
@@ -186,11 +191,13 @@ function FirstRunLanded({
   firstRun,
   rawMinutes,
   highJudgment,
+  overrideMinutes,
   toolPath,
 }: {
   firstRun: FirstRunPayload;
   rawMinutes: number;
   highJudgment: boolean;
+  overrideMinutes?: number;
   toolPath: string;
 }) {
   return (
@@ -216,7 +223,11 @@ function FirstRunLanded({
       </div>
 
       <div className="mt-4">
-        <Receipt rawMinutes={rawMinutes} highJudgment={highJudgment} />
+        <Receipt
+          rawMinutes={rawMinutes}
+          highJudgment={highJudgment}
+          overrideMinutes={overrideMinutes}
+        />
       </div>
 
       <Button asChild className="mt-5">

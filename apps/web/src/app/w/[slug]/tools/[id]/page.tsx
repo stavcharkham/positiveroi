@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ListX } from "lucide-react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { effectiveMinutesSavedPerRun } from "@positiveroi/core";
 import { timeseries, toolStats, type ResolvedPeriod } from "@/lib/aggregates";
 import { requireMember, type WorkspaceRow } from "@/lib/guards";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -34,9 +35,11 @@ import { TOOL_TYPE_META, fmtHours, fmtNum } from "../tool-meta";
 import {
   RUNS_PAGE_SIZE,
   getBaselineHistory,
+  getCreditHistory,
   getRunsPage,
   getSourceCounts,
 } from "./data";
+import { CreditPanel } from "./credit-panel";
 import { RunsTable, type RunDisplayRow } from "./runs-table";
 import { SettingsPanel } from "./settings-panel";
 import { ToolTabNav, parseToolTab } from "./tab-nav";
@@ -54,7 +57,7 @@ export default async function ToolDetailPage({
   const sp = await searchParams;
   if (!UUID_RE.test(id)) notFound();
 
-  const { workspace, member } = await requireMember(slug);
+  const { user, workspace, member } = await requireMember(slug);
   const admin = getAdminClient();
 
   const { data: toolRow, error: toolError } = await admin
@@ -84,6 +87,12 @@ export default async function ToolDetailPage({
   const stat = statsMap.get(tool.id);
   const ownerName = ownerRes.data?.display_name || "former member";
   const status = deriveToolStatus(tool.status, stat?.lastRunAt ?? null);
+  const override =
+    tool.minutes_saved_override === null ? null : Number(tool.minutes_saved_override);
+  const creditPerRun = effectiveMinutesSavedPerRun(
+    Number(tool.minutes_saved_per_run),
+    override,
+  );
 
   return (
     <div>
@@ -111,7 +120,12 @@ export default async function ToolDetailPage({
               <Avatar name={ownerName} size="sm" /> {ownerName}
             </span>
             <span className="font-mono">
-              {fmtNum(Number(tool.minutes_saved_per_run))} min/run credited
+              {fmtNum(creditPerRun)} min/run credited
+              {override !== null && (
+                <span className="ml-1.5 rounded-full bg-accent-soft px-2 py-px text-accent">
+                  builder-set
+                </span>
+              )}
             </span>
             <span>registered {fmtDate(tool.created_at, workspace.timezone)}</span>
           </div>
@@ -156,6 +170,7 @@ export default async function ToolDetailPage({
             tool={tool}
             workspaceSlug={slug}
             canEdit={member.role !== "builder"}
+            canEditCredit={member.role !== "builder" || tool.owner_id === user.id}
           />
         )}
       </div>
@@ -206,7 +221,14 @@ async function OverviewTab({
           sub={
             periodParam
               ? `${fmtHours(allTimeMinutes)} hrs all-time`
-              : `${fmtNum(Number(tool.minutes_saved_per_run))} credited min/run`
+              : `${fmtNum(
+                  effectiveMinutesSavedPerRun(
+                    Number(tool.minutes_saved_per_run),
+                    tool.minutes_saved_override === null
+                      ? null
+                      : Number(tool.minutes_saved_override),
+                  ),
+                )} credited min/run`
           }
           undercounted
         />
@@ -218,6 +240,11 @@ async function OverviewTab({
         <Receipt
           rawMinutes={Number(tool.raw_estimate_minutes)}
           highJudgment={tool.high_judgment}
+          overrideMinutes={
+            tool.minutes_saved_override === null
+              ? undefined
+              : Number(tool.minutes_saved_override)
+          }
         />
       </div>
 
@@ -427,13 +454,26 @@ async function SettingsTab({
   tool,
   workspaceSlug,
   canEdit,
+  canEditCredit,
 }: {
   admin: SupabaseClient;
   workspace: WorkspaceRow;
   tool: ToolRecord;
   workspaceSlug: string;
   canEdit: boolean;
+  canEditCredit: boolean;
 }) {
+  const override =
+    tool.minutes_saved_override === null ? null : Number(tool.minutes_saved_override);
+  const creditPanel = canEditCredit ? (
+    <CreditPanel
+      workspaceSlug={workspaceSlug}
+      toolId={tool.id}
+      suggested={Number(tool.minutes_saved_per_run)}
+      initialOverride={override}
+    />
+  ) : null;
+
   if (!canEdit) {
     return (
       <div className="space-y-4">
@@ -448,14 +488,17 @@ async function SettingsTab({
             <Receipt
               rawMinutes={Number(tool.raw_estimate_minutes)}
               highJudgment={tool.high_judgment}
+              overrideMinutes={override ?? undefined}
             />
           </div>
         </section>
+        {creditPanel}
         <BaselineHistorySection
           admin={admin}
           workspace={workspace}
           toolId={tool.id}
         />
+        <CreditHistorySection admin={admin} workspace={workspace} toolId={tool.id} />
       </div>
     );
   }
@@ -470,7 +513,9 @@ async function SettingsTab({
         initialHighJudgment={tool.high_judgment}
         status={tool.status}
       />
+      {creditPanel}
       <BaselineHistorySection admin={admin} workspace={workspace} toolId={tool.id} />
+      <CreditHistorySection admin={admin} workspace={workspace} toolId={tool.id} />
     </div>
   );
 }
@@ -524,6 +569,66 @@ async function BaselineHistorySection({
               </span>
               <span className="font-mono text-xs text-foreground-muted">
                 {fmtStamp(change.changed_at, workspace.timezone)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+async function CreditHistorySection({
+  admin,
+  workspace,
+  toolId,
+}: {
+  admin: SupabaseClient;
+  workspace: WorkspaceRow;
+  toolId: string;
+}) {
+  const [history, membersRes] = await Promise.all([
+    getCreditHistory(admin, workspace.id, toolId),
+    admin
+      .from("members")
+      .select("user_id, display_name")
+      .eq("workspace_id", workspace.id),
+  ]);
+  if (history.length === 0) return null;
+  const nameByUser = new Map(
+    ((membersRes.data ?? []) as { user_id: string; display_name: string }[]).map(
+      (m) => [m.user_id, m.display_name],
+    ),
+  );
+
+  return (
+    <section className="rounded-lg border border-border bg-surface p-6 shadow-xs">
+      <h2 className="text-[0.9375rem] font-semibold text-foreground">
+        Credit history
+      </h2>
+      <p className="mt-1 text-sm text-foreground-secondary">
+        Every builder-set credit, on the record.
+      </p>
+      <ul className="mt-4 space-y-2.5">
+        {history.map((change) => {
+          const who =
+            (change.changed_by && nameByUser.get(change.changed_by)) ||
+            "former member";
+          const line =
+            change.new_value === null
+              ? "went back to the suggested credit"
+              : change.old_value === null
+                ? `set the credit to ${fmtNum(Number(change.new_value))} min/run`
+                : `changed the credit ${fmtNum(Number(change.old_value))} → ${fmtNum(Number(change.new_value))} min/run`;
+          return (
+            <li
+              key={change.id}
+              className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[0.8125rem]"
+            >
+              <span className="font-medium text-foreground">{who}</span>
+              <span className="text-foreground-secondary">{line}</span>
+              <span className="font-mono text-xs text-foreground-muted">
+                {fmtStamp(change.created_at, workspace.timezone)}
               </span>
             </li>
           );

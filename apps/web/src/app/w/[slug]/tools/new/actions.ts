@@ -81,6 +81,7 @@ export async function createToolAction(
         origin: "dashboard",
         raw_estimate_minutes: data.raw_estimate_minutes,
         high_judgment: data.high_judgment,
+        minutes_saved_override: data.minutes_saved_override ?? null,
       })
       .select("id, slug")
       .single();
@@ -106,6 +107,22 @@ export async function createToolAction(
   if (historyError) {
     await admin.from("tools").delete().eq("id", tool.id);
     return { ok: false, error: "Could not create the tool. Try again." };
+  }
+
+  // Same invariant for the credit: a builder-set number at creation gets its
+  // credit_history row, or the whole creation rolls back.
+  if (data.minutes_saved_override !== undefined) {
+    const { error: creditHistoryError } = await admin.from("credit_history").insert({
+      workspace_id: workspace.id,
+      tool_id: tool.id,
+      changed_by: user.id,
+      old_value: null,
+      new_value: data.minutes_saved_override,
+    });
+    if (creditHistoryError) {
+      await admin.from("tools").delete().eq("id", tool.id);
+      return { ok: false, error: "Could not create the tool. Try again." };
+    }
   }
 
   revalidatePath(`/w/${workspaceSlug}/tools`);

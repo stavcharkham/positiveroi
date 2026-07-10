@@ -5,6 +5,7 @@ import { methodologyReceipt, computeMinutesSavedPerRun, slugify } from "@positiv
 import type { PositiveROIConfig } from "../src/config.js";
 import { SETUP_HINT } from "../src/config.js";
 import { handleGetSummary } from "../src/tools/getSummary.js";
+import { handleListMetrics } from "../src/tools/listMetrics.js";
 import { handleListTools } from "../src/tools/listTools.js";
 import { handleLogRun } from "../src/tools/logRun.js";
 import { handleRegisterTool } from "../src/tools/registerTool.js";
@@ -87,6 +88,19 @@ beforeAll(async () => {
               status: "active",
               minutes_saved_per_run: 18,
             },
+          ],
+        });
+      }
+      if (req.method === "GET" && req.url === "/api/v1/metric-definitions") {
+        if (req.headers.authorization !== "Bearer roi_ingest_test") {
+          return respond(401, {
+            error: { code: "unauthorized", message: "Missing or invalid API key." },
+          });
+        }
+        return respond(200, {
+          metrics: [
+            { key: "revenue_influenced", name: "Revenue influenced", unit: "currency" },
+            { key: "leads_generated", name: "Leads generated", unit: "count" },
           ],
         });
       }
@@ -243,6 +257,44 @@ describe("list_tools and get_summary", () => {
   it("both return the setup hint when unconfigured", async () => {
     expect(text(await handleListTools(null))).toBe(SETUP_HINT);
     expect(text(await handleGetSummary(null))).toBe(SETUP_HINT);
+    expect(requests).toHaveLength(0);
+  });
+});
+
+describe("list_metrics", () => {
+  it("lists metric definitions and tells the agent how to attach them", async () => {
+    const result = await handleListMetrics(config);
+    expect(result.isError).toBeUndefined();
+    expect(text(result)).toContain("`revenue_influenced`");
+    expect(text(result)).toContain("Revenue influenced (currency)");
+    expect(text(result)).toContain("`leads_generated`");
+    expect(text(result)).toContain("Leads generated (count)");
+    expect(text(result)).toContain("metrics: {key: value} when calling log_run");
+    expect(requests[0]).toMatchObject({
+      method: "GET",
+      url: "/api/v1/metric-definitions",
+      authorization: "Bearer roi_ingest_test",
+    });
+  });
+
+  it("surfaces a friendly 401 when the server rejects the key", async () => {
+    const result = await handleListMetrics({ ...config, apiKey: "roi_ingest_wrong" });
+    expect(result.isError).toBe(true);
+    expect(text(result)).toContain("401 unauthorized");
+    expect(text(result)).toContain("impact-setup");
+  });
+
+  it("returns a friendly error when the server is unreachable", async () => {
+    const result = await handleListMetrics({
+      endpoint: "http://127.0.0.1:1",
+      apiKey: "roi_ingest_test",
+    });
+    expect(result.isError).toBe(true);
+    expect(text(result)).toContain("Could not reach the PositiveROI server");
+  });
+
+  it("returns the setup hint when unconfigured", async () => {
+    expect(text(await handleListMetrics(null))).toBe(SETUP_HINT);
     expect(requests).toHaveLength(0);
   });
 });

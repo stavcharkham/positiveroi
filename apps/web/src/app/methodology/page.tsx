@@ -189,7 +189,23 @@ export default function MethodologyPage() {
           </p>
         </Section>
 
-        <Section n="05" title="Every number drills to its runs">
+        <Section n="05" title="A default, not a lock">
+          <p>
+            The Undercount is what every tool starts with, and what most tools
+            keep. But the builder knows their tool better than a formula does,
+            so the final credited minutes per run is editable — in the
+            registration wizard and later on the tool&apos;s settings tab.
+          </p>
+          <p>
+            Transparency replaces the lock: a credit that differs from the
+            suggestion is labeled <em>builder-set</em> on every receipt and
+            drill-down, next to the suggestion it replaced, and every change is
+            audited — who, when, old, new. Only the dashboard can set it; tools
+            registered through the API always start on the suggestion.
+          </p>
+        </Section>
+
+        <Section n="06" title="Every number drills to its runs">
           <p>
             Every number in the product opens. Company hours drill to per-tool
             hours, per-tool hours drill to the runs table, and each run expands
@@ -203,7 +219,7 @@ export default function MethodologyPage() {
           </p>
         </Section>
 
-        <Section n="06" title="Caps and audits">
+        <Section n="07" title="Caps and audits">
           <p>
             An ingest call may override the per-run credit downward, for
             example when a run only did half the job. The override is clamped
@@ -230,7 +246,7 @@ export default function MethodologyPage() {
           </ul>
         </Section>
 
-        <Section n="07" title="Changing the constants">
+        <Section n="08" title="Changing the constants">
           <p>
             The {CONSERVATISM_FACTOR}, the {JUDGMENT_FACTOR}, and the{" "}
             {MULTIPLIER_HOURS_30D} are product decisions, not tuning

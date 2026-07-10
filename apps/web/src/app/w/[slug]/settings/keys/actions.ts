@@ -7,9 +7,12 @@ import { requireMember } from "@/lib/guards";
 import { getAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Key management, admin only. The plaintext secret exists exactly once: in
- * the create response. Only the sha256 hash and a display prefix are stored.
- * Revoked rows are kept — events attribute to them.
+ * Key management. Keys are user-level: every member creates and revokes their
+ * own; admins can revoke anyone's and are the only role that can create
+ * read-scoped keys (read keys expose company-wide numbers). The plaintext
+ * secret exists exactly once: in the create response. Only the sha256 hash
+ * and a display prefix are stored. Revoked rows are kept — events attribute
+ * to them.
  */
 
 const createKeySchema = z.object({
@@ -28,7 +31,7 @@ export async function createApiKeyAction(
   workspaceSlug: string,
   input: unknown,
 ): Promise<CreateApiKeyResult> {
-  const { user, workspace } = await requireMember(workspaceSlug, "admin");
+  const { user, workspace, member } = await requireMember(workspaceSlug);
 
   const parsed = createKeySchema.safeParse(input);
   if (!parsed.success) {
@@ -36,6 +39,11 @@ export async function createApiKeyAction(
       ok: false,
       error: "Name the key (up to 80 characters) and pick a scope.",
     };
+  }
+
+  // Read keys expose company-wide numbers; only admins may create them.
+  if (parsed.data.scope === "read" && member.role !== "admin") {
+    return { ok: false, error: "Only admins can create read keys." };
   }
 
   const key = generateApiKey(parsed.data.scope);
@@ -65,12 +73,28 @@ export async function revokeApiKeyAction(
   workspaceSlug: string,
   keyId: string,
 ): Promise<RevokeApiKeyResult> {
-  const { workspace } = await requireMember(workspaceSlug, "admin");
+  const { user, workspace, member } = await requireMember(workspaceSlug);
 
   const parsedId = z.string().uuid().safeParse(keyId);
   if (!parsedId.success) return { ok: false, error: "Unknown key." };
 
   const admin = getAdminClient();
+  const { data: keyRow } = await admin
+    .from("api_keys")
+    .select("id, created_by, revoked_at")
+    .eq("id", parsedId.data)
+    .eq("workspace_id", workspace.id)
+    .maybeSingle();
+  if (!keyRow) return { ok: false, error: "Unknown key." };
+
+  // Owners revoke their own keys; admins revoke anyone's.
+  if (member.role !== "admin" && keyRow.created_by !== user.id) {
+    return { ok: false, error: "You can only revoke your own keys." };
+  }
+  if (keyRow.revoked_at) {
+    return { ok: false, error: "That key is already revoked." };
+  }
+
   const { data, error } = await admin
     .from("api_keys")
     .update({ revoked_at: new Date().toISOString() })

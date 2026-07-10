@@ -6,7 +6,7 @@ Pull your workspace numbers into BI tools, spreadsheets, or scripts. All endpoin
 Authorization: Bearer roi_read_...
 ```
 
-Create read-scoped keys in Settings → API Keys. Every aggregate excludes test runs. Responses are cached briefly (`Cache-Control: private, max-age=60`).
+Read-scoped keys expose company-wide numbers, so only workspace admins can create them (Settings → API Keys). Every aggregate excludes test runs. Responses are cached briefly (`Cache-Control: private, max-age=60`).
 
 ## Key scopes
 
@@ -21,6 +21,7 @@ Ingest keys are for machines that log runs; read keys are for tools that consume
 | `GET /api/v1/stats` | no | yes |
 | `GET /api/v1/timeseries` | no | yes |
 | `GET /api/v1/metrics` | no | yes |
+| `GET /api/v1/metric-definitions` | yes | yes |
 
 Calling an endpoint outside your key's scope returns `403 forbidden_scope`. The error envelope and codes are shared with the [ingestion API](ingestion.md#error-envelope).
 
@@ -91,6 +92,21 @@ Totals per custom metric definition over a range.
 }
 ```
 
+## GET /api/v1/metric-definitions
+
+The workspace's metric definitions — key, name, unit — ordered by creation. Definitions only: no values, no totals. Accepts **both** scopes (like `/summary`), so ingest-keyed agents can discover which keys to attach as `metrics` when logging runs; the MCP `list_metrics` tool uses it.
+
+```json
+{
+  "metrics": [
+    { "key": "revenue_influenced", "name": "Revenue influenced", "unit": "currency" },
+    { "key": "leads_generated", "name": "Leads generated", "unit": "count" }
+  ]
+}
+```
+
+`unit` is one of `currency`, `count`, `duration`.
+
 ## GET /api/v1/summary
 
 The one aggregate ingest keys may also read (it powers setup verification and progress narration). Deliberately narrow: no money, no per-builder breakdown, no timeseries.
@@ -105,6 +121,8 @@ List tools. The shape depends on the key's scope:
 
 - **ingest** (slim): `id`, `slug`, `name`, `type`, `status`, `minutes_saved_per_run`
 - **read** (full): slim fields plus `owner`, `runs_30d`, `hours_all_time`, `last_run_at`
+
+`minutes_saved_per_run` is the credit new runs snapshot: the builder-set number when the tool's owner set one in the dashboard, otherwise the suggested Undercount.
 
 ## POST /api/v1/tools
 

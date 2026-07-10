@@ -96,9 +96,22 @@ const toolCreateBase = z.object({
   high_judgment: z.boolean(),
 });
 
-/** Dashboard path: cap 480 raw minutes. */
+/**
+ * Builder-set credited minutes per run — replaces the suggested Undercount
+ * when it differs. Dashboard plane only; the API tool schema never carries it.
+ */
+export const creditOverrideSchema = z
+  .number()
+  .gt(0)
+  .max(RAW_ESTIMATE_MAX_DASHBOARD)
+  .refine((v) => Math.abs(v * 100 - Math.round(v * 100)) < 1e-6, {
+    message: "credited minutes support at most 2 decimal places",
+  });
+
+/** Dashboard path: cap 480 raw minutes; optional builder-set credit. */
 export const toolCreateSchema = toolCreateBase.extend({
   raw_estimate_minutes: z.number().gt(0).max(RAW_ESTIMATE_MAX_DASHBOARD),
+  minutes_saved_override: creditOverrideSchema.optional(),
 });
 
 /** API path (POST /api/v1/tools): hard cap 120 raw minutes. */
@@ -113,6 +126,24 @@ export const toolCreateApiSchema = toolCreateBase.extend({
 });
 
 export type ToolCreate = z.infer<typeof toolCreateSchema>;
+
+// ---------------------------------------------------------------------------
+// Metric definitions (GET /api/v1/metric-definitions)
+// ---------------------------------------------------------------------------
+
+export const metricDefinitionSchema = z.object({
+  key: z.string().regex(/^[a-z0-9_]{2,40}$/),
+  name: z.string().min(1),
+  unit: metricUnitSchema,
+});
+
+export type MetricDefinition = z.infer<typeof metricDefinitionSchema>;
+
+export const metricDefinitionsResponseSchema = z.object({
+  metrics: z.array(metricDefinitionSchema),
+});
+
+export type MetricDefinitionsResponse = z.infer<typeof metricDefinitionsResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // API error envelope

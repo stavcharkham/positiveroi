@@ -27,6 +27,8 @@ export interface ToolRecord {
   raw_estimate_minutes: number;
   high_judgment: boolean;
   minutes_saved_per_run: number;
+  /** Builder-set credit; null = the suggested Undercount applies. */
+  minutes_saved_override: number | null;
   created_at: string;
   updated_at: string;
 }

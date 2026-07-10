@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  creditOverrideSchema,
   ingestBodySchema,
   ingestEventSchema,
   normalizeIngestBody,
@@ -65,6 +66,41 @@ describe("tool creation caps", () => {
     expect(() => toolCreateSchema.parse({ ...base, raw_estimate_minutes: 481 })).toThrow();
     expect(toolCreateApiSchema.parse({ ...base, raw_estimate_minutes: 120 })).toBeTruthy();
     expect(() => toolCreateApiSchema.parse({ ...base, raw_estimate_minutes: 121 })).toThrow();
+  });
+});
+
+describe("creditOverrideSchema (builder-set credit)", () => {
+  it("accepts (0, 480] at 2 decimal places", () => {
+    expect(creditOverrideSchema.parse(0.01)).toBe(0.01);
+    expect(creditOverrideSchema.parse(13.5)).toBe(13.5);
+    expect(creditOverrideSchema.parse(480)).toBe(480);
+  });
+
+  it("rejects zero, negatives, above the cap, and 3+ decimals", () => {
+    expect(() => creditOverrideSchema.parse(0)).toThrow();
+    expect(() => creditOverrideSchema.parse(-5)).toThrow();
+    expect(() => creditOverrideSchema.parse(480.01)).toThrow();
+    expect(() => creditOverrideSchema.parse(1.005)).toThrow();
+  });
+
+  it("rides the dashboard tool schema, never the API one", () => {
+    const base = {
+      name: "T",
+      type: "automation",
+      high_judgment: false,
+      raw_estimate_minutes: 45,
+    } as const;
+    const dashboard = toolCreateSchema.parse({ ...base, minutes_saved_override: 40 });
+    expect(dashboard.minutes_saved_override).toBe(40);
+    expect(() =>
+      toolCreateSchema.parse({ ...base, minutes_saved_override: 481 }),
+    ).toThrow();
+    // The API plane strips the key: machine-registered tools cannot set credit.
+    const api = toolCreateApiSchema.parse({
+      ...base,
+      minutes_saved_override: 40,
+    }) as Record<string, unknown>;
+    expect(api.minutes_saved_override).toBeUndefined();
   });
 });
 

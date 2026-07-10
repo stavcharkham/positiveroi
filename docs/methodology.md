@@ -41,6 +41,12 @@ The vocabulary is strict, everywhere in the product:
 - **Minutes are estimates, and labeled as such.** Every hours figure carries an `undercounted` tag. The headline framing is always "measured runs × credited minutes per run."
 - **Test runs never count.** Events flagged `is_test` are excluded from every aggregate, every leaderboard, the public page, the badge, and badge awards. They appear in drill-downs with a visible test label.
 
+## The suggestion is a default, not a lock
+
+The Undercount is what every tool starts with, and what most tools keep. But the builder knows their tool better than a formula does, so the final credited minutes per run is editable — in the registration wizard and later on the tool's settings tab — anywhere in (0, 480].
+
+Transparency replaces the lock: a credit that differs from the suggestion is labeled **builder-set** on every receipt and drill-down, next to the suggestion it replaced, and every change is audited (who, when, old, new). Only the dashboard can set it — tools registered through the API always start on the suggestion.
+
 ## The drill-down guarantee (the Receipt)
 
 Every number in the product opens. Company hours drill to per-tool hours, per-tool hours drill to the runs table, and each run expands to its full record: when it ran, what logged it, what the credit was and why. Badges drill to the exact 30 days of runs that earned them. Nothing is a dead-end aggregate.

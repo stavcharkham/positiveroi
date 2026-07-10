@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   computeMinutesSavedPerRun,
+  effectiveMinutesSavedPerRun,
   fteEquivalent,
   methodologyReceipt,
   multiplierProgress,
+  normalizeCreditOverride,
   tierFor,
 } from "../src/methodology.js";
 
@@ -87,5 +89,37 @@ describe("multiplierProgress / tiers / FTE", () => {
     // Same rate over a week
     expect(fteEquivalent(42, 7)).toBeCloseTo(42 / (180 * (7 / 30.44)), 6);
     expect(fteEquivalent(0, 30)).toBe(0);
+  });
+});
+
+describe("builder-set credit (the override layer)", () => {
+  it("effectiveMinutesSavedPerRun prefers the override, else the suggestion", () => {
+    expect(effectiveMinutesSavedPerRun(13.5, null)).toBe(13.5);
+    expect(effectiveMinutesSavedPerRun(13.5, undefined)).toBe(13.5);
+    expect(effectiveMinutesSavedPerRun(13.5, 20)).toBe(20);
+    expect(effectiveMinutesSavedPerRun(13.5, 0.01)).toBe(0.01);
+  });
+
+  it("normalizeCreditOverride stores null when the request equals the suggestion", () => {
+    expect(normalizeCreditOverride(13.5, null)).toBeNull();
+    expect(normalizeCreditOverride(13.5, undefined)).toBeNull();
+    expect(normalizeCreditOverride(13.5, 13.5)).toBeNull();
+    expect(normalizeCreditOverride(13.5, 20)).toBe(20);
+    expect(normalizeCreditOverride(13.5, 6)).toBe(6);
+  });
+
+  it("round-trips: a normalized override always changes the effective credit", () => {
+    for (const suggested of [0.05, 6, 13.5, 27, 288]) {
+      for (const requested of [null, 0.01, 6, 13.5, 240, 480]) {
+        const override = normalizeCreditOverride(suggested, requested);
+        const effective = effectiveMinutesSavedPerRun(suggested, override);
+        if (override === null) {
+          expect(effective).toBe(suggested);
+        } else {
+          expect(effective).toBe(requested);
+          expect(effective).not.toBe(suggested);
+        }
+      }
+    }
   });
 });

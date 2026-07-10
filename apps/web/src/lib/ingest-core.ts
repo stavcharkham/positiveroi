@@ -5,6 +5,7 @@ import {
   OCCURRED_AT_MAX_FUTURE_MS,
   OCCURRED_AT_MAX_PAST_DAYS,
   TRAILING_WINDOW_DAYS,
+  effectiveMinutesSavedPerRun,
   ingestBodySchema,
   normalizeIngestBody,
   multiplierProgress,
@@ -45,6 +46,8 @@ interface ToolRow {
   owner_id: string;
   raw_estimate_minutes: number;
   minutes_saved_per_run: number;
+  /** Builder-set credit; null means the suggested Undercount applies. */
+  minutes_saved_override: number | null;
 }
 
 const UUID_RE =
@@ -112,7 +115,7 @@ async function resolveTools(
   const uuidRefs = refs.filter((r) => UUID_RE.test(r));
 
   const columns =
-    "id, slug, name, status, owner_id, raw_estimate_minutes, minutes_saved_per_run";
+    "id, slug, name, status, owner_id, raw_estimate_minutes, minutes_saved_per_run, minutes_saved_override";
   const queries = [
     supabase
       .from("tools")
@@ -257,10 +260,16 @@ async function ingestOne(
     return rejected("metadata_too_large", "metadata exceeds the 8KB limit.");
   }
 
+  // Snapshot: per-event caller override (clamped) beats the tool's credit;
+  // the tool's credit is the builder-set number when present, else the
+  // suggested Undercount from the generated column.
   const hasOverride = event.minutes_saved !== undefined;
   const minutesSaved = hasOverride
     ? clampMinutesSaved(event.minutes_saved as number, tool.raw_estimate_minutes)
-    : tool.minutes_saved_per_run;
+    : effectiveMinutesSavedPerRun(
+        tool.minutes_saved_per_run,
+        tool.minutes_saved_override,
+      );
 
   const row: Record<string, unknown> = {
     workspace_id: ctx.workspaceId,

@@ -494,9 +494,9 @@ Navigation: left sidebar — My Impact, Company, Tools, Builders, Metrics; Setti
 
 **Company dashboard** (`/w/[slug]`): four drillable headline stats — Hours saved (`undercounted` tag), Multiplier equivalent ("2.4 full-time jobs", sub-copy "180 credited hrs/mo = 1 FTE"), Value (admin-only inline rate edit), Runs measured. Hours/week trend chart; custom-metric tiles; two leaderboards (Builders, Tools — top 5 + view all; owner via left join, departed members shown as "former member"); **Gone Quiet** panel (display-only, no nudge action: tools with prior runs but none in 14 days). Visible to all roles read-only (transparency is a feature); admin controls hidden for builders.
 
-**Tool detail** (`/w/[slug]/tools/[id]`): tabs — Overview (Receipt, per-source run counts so a silently failing hook is visible: "0 via hook, 12 via mcp"), Runs (paginated table, test runs labeled, manual runs attributed "added by X", baseline-change markers), Setup (the Connect snippets), Settings (baseline edit — lead/admin only, re-runs the Receipt, writes `baseline_history`; archive).
+**Tool detail** (`/w/[slug]/tools/[id]`): tabs — Overview (Receipt, per-source run counts so a silently failing hook is visible: "0 via hook, 12 via mcp"), Runs (paginated table, test runs labeled, manual runs attributed "added by X", baseline-change markers), Setup (the Connect snippets), Settings (baseline edit — lead/admin only, re-runs the Receipt, writes `baseline_history`; credit edit — owner or lead/admin, sets `minutes_saved_override` within (0, 480], writes `credit_history`, labeled builder-set on every receipt; archive).
 
-**Settings**: general (name, rate, currency, timezone, plan section: "Free while in beta — contact to upgrade"), members (list + link-invite create/revoke with use counts), keys (create/revoke, scope, prefix, `last_used_at` — "never used" is the #1 onboarding debug signal), public (live preview of the real page behind a "not published" scrim, enable toggle, slug, show_tools/show_builders/show_money toggles, badge embed code).
+**Settings**: general (name, rate, currency, timezone, plan section: "Free while in beta — contact to upgrade"), members (list + link-invite create/revoke with use counts), keys (user-level: every member creates/revokes their own ingest keys; admins see everyone's grouped by owner, revoke any, and are the only role that can create read keys; scope, prefix, `last_used_at` — "never used" is the #1 onboarding debug signal), public (live preview of the real page behind a "not published" scrim, enable toggle, slug, show_tools/show_builders/show_money toggles, badge embed code).
 
 **Public page** (`/p/[slug]`, ISR 300s): headline "Acme's builders saved 340 hours this quarter" + `undercounted` tag → inline Undercount explainer; trend sparkline; runs measured / builders active / Multipliers earned (config-gated); optional top-tools (names + hours only). Footer "Counted with PositiveROI — the Undercount methodology" → landing; **not removable on hosted free tier**. Disabled/unknown slug → plain 404.
 
@@ -601,7 +601,7 @@ Sizes: S ≈ one agent, short; M ≈ one agent, one focused stretch; L ≈ one a
 
 | V1 item | Proof |
 |---|---|
-| Workspaces + roles + invites | Two-browser test: admin creates workspace, copies invite link, second user joins as builder; builder cannot see settings/keys; RLS CI test shows zero cross-workspace rows |
+| Workspaces + roles + invites | Two-browser test: admin creates workspace, copies invite link, second user joins as builder; builder sees only their own API keys in Settings and cannot reach General/Members/Public; RLS CI test shows zero cross-workspace rows |
 | Guided registration + methodology | Register at 45 min + high judgment → tool stores 13.5; DB generated column equals `core` function in round-trip test; Receipt shows both cuts on screen |
 | REST ingestion + idempotency | Same batch POSTed twice → second response all `duplicate`, run count unchanged; override 999999 → clamped to raw estimate; `occurred_at` next year → 422 |
 | Rate limit / abuse | 121st request in a minute → 429 with `Retry-After`; 8KB+ metadata → 422 |

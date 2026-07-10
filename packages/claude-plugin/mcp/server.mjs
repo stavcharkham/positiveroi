@@ -17125,11 +17125,23 @@ var toolCreateBase = external_exports.object({
   description: external_exports.string().max(2e3).optional().default(""),
   high_judgment: external_exports.boolean()
 });
+var creditOverrideSchema = external_exports.number().gt(0).max(RAW_ESTIMATE_MAX_DASHBOARD).refine((v) => Math.abs(v * 100 - Math.round(v * 100)) < 1e-6, {
+  message: "credited minutes support at most 2 decimal places"
+});
 var toolCreateSchema = toolCreateBase.extend({
-  raw_estimate_minutes: external_exports.number().gt(0).max(RAW_ESTIMATE_MAX_DASHBOARD)
+  raw_estimate_minutes: external_exports.number().gt(0).max(RAW_ESTIMATE_MAX_DASHBOARD),
+  minutes_saved_override: creditOverrideSchema.optional()
 });
 var toolCreateApiSchema = toolCreateBase.extend({
   raw_estimate_minutes: external_exports.number().gt(0).max(RAW_ESTIMATE_MAX_API, `API-registered tools are capped at ${RAW_ESTIMATE_MAX_API} raw minutes; larger baselines must be set in the dashboard`)
+});
+var metricDefinitionSchema = external_exports.object({
+  key: external_exports.string().regex(/^[a-z0-9_]{2,40}$/),
+  name: external_exports.string().min(1),
+  unit: metricUnitSchema
+});
+var metricDefinitionsResponseSchema = external_exports.object({
+  metrics: external_exports.array(metricDefinitionSchema)
 });
 var apiErrorSchema = external_exports.object({
   error: external_exports.object({
@@ -21294,6 +21306,32 @@ async function handleGetSummary(config2) {
   );
 }
 
+// packages/mcp-server/src/tools/listMetrics.ts
+var listMetricsDescription = "List the workspace's business metric definitions (key, name, unit) \u2014 use this to discover which metric keys you can attach as metrics: {key: value} when calling log_run.";
+async function handleListMetrics(config2) {
+  if (!config2) return errorResult(SETUP_HINT);
+  let response;
+  try {
+    response = await apiRequest(config2, "GET", "/api/v1/metric-definitions");
+  } catch (cause) {
+    return errorResult(cause instanceof Error ? cause.message : String(cause));
+  }
+  if (response.status !== 200) return errorResult(friendlyError(response.status, response.json));
+  const metrics = response.json?.metrics ?? [];
+  if (metrics.length === 0) {
+    return textResult(
+      "No business metrics are defined in this workspace yet \u2014 an admin can add them on the dashboard's Metrics page."
+    );
+  }
+  const lines = metrics.map((m) => `- \`${m.key}\` \u2014 ${m.name} (${m.unit})`);
+  return textResult(
+    `Business metrics (${metrics.length}):
+${lines.join("\n")}
+
+Attach these as metrics: {key: value} when calling log_run to credit business outcomes to a run.`
+  );
+}
+
 // packages/mcp-server/src/tools/listTools.ts
 var listToolsDescription = "List the workspace's registered tools with their slugs \u2014 use this to resolve the slug to pass to log_run, or to check whether a tool is already registered before calling register_tool.";
 async function handleListTools(config2) {
@@ -21439,6 +21477,11 @@ function buildServer() {
     "list_tools",
     { description: listToolsDescription },
     async () => handleListTools(resolveConfig())
+  );
+  server.registerTool(
+    "list_metrics",
+    { description: listMetricsDescription },
+    async () => handleListMetrics(resolveConfig())
   );
   server.registerTool(
     "get_summary",

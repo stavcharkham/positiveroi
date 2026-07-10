@@ -14,4 +14,5 @@ export {
   logRunInput,
 } from "./tools/logRun.js";
 export { handleListTools, listToolsDescription } from "./tools/listTools.js";
+export { handleListMetrics, listMetricsDescription } from "./tools/listMetrics.js";
 export { handleGetSummary, getSummaryDescription } from "./tools/getSummary.js";

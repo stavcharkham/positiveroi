@@ -5,7 +5,7 @@ For anything that runs on a schedule or a trigger: Zapier, Trigger.dev, n8n, Mak
 ## What you need
 
 - Your tool's **slug** (shown on the tool's Setup tab after you register it in the dashboard).
-- An **ingest API key** (`roi_ingest_...`), from Settings → API Keys. Onboarding created one for you.
+- An **ingest API key** (`roi_ingest_...`), from Settings → API Keys. Every member creates their own; onboarding created one for you.
 - Your endpoint URL. Hosted: `https://positiveroi.vercel.app`. Self-hosted: your deployment URL.
 
 ## curl

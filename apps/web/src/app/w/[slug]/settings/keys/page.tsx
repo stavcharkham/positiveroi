@@ -1,35 +1,69 @@
 import type { Metadata } from "next";
 import { requireMember } from "@/lib/guards";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { formatDate, timeAgo } from "../format";
-import { KeysPanel, type ApiKeyListItem } from "./keys-panel";
+import {
+  groupKeysByOwner,
+  toKeyListItem,
+  type ApiKeyDbRow,
+} from "./group-keys";
+import { KeysPanel, type KeyGroup } from "./keys-panel";
 
 export const metadata: Metadata = { title: "API keys" };
 
+/**
+ * Keys are user-level: every member sees and manages their own. Admins also
+ * see everyone's, grouped by owner. Reads go through the service-role client
+ * because requireMember already proved membership via RLS.
+ */
 export default async function KeysSettingsPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { workspace } = await requireMember(slug, "admin");
+  const { user, workspace, member } = await requireMember(slug);
+  const isAdmin = member.role === "admin";
 
   const admin = getAdminClient();
-  const { data: keyRows } = await admin
+  let query = admin
     .from("api_keys")
-    .select("id, name, scope, key_prefix, created_at, last_used_at, revoked_at")
+    .select(
+      "id, name, scope, key_prefix, created_by, created_at, last_used_at, revoked_at",
+    )
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false });
+  if (!isAdmin) query = query.eq("created_by", user.id);
+  const { data: keyRows } = await query;
 
-  const keys: ApiKeyListItem[] = (keyRows ?? []).map((k) => ({
-    id: k.id as string,
-    name: (k.name as string) || "Untitled key",
-    scope: k.scope as "ingest" | "read",
-    prefix: k.key_prefix as string,
-    created: formatDate(k.created_at as string),
-    lastUsed: k.last_used_at ? timeAgo(k.last_used_at as string) : null,
-    revoked: Boolean(k.revoked_at),
-  }));
+  const rows = (keyRows ?? []) as ApiKeyDbRow[];
+  const myKeys = rows
+    .filter((k) => k.created_by === user.id)
+    .map((k) => toKeyListItem(k));
 
-  return <KeysPanel slug={slug} keys={keys} />;
+  let otherGroups: KeyGroup[] = [];
+  if (isAdmin) {
+    const otherRows = rows.filter((k) => k.created_by !== user.id);
+    if (otherRows.length > 0) {
+      const { data: memberRows } = await admin
+        .from("members")
+        .select("user_id, display_name")
+        .eq("workspace_id", workspace.id);
+      const nameByUser = new Map(
+        (memberRows ?? []).map((m) => [
+          m.user_id as string,
+          m.display_name as string,
+        ]),
+      );
+      otherGroups = groupKeysByOwner(otherRows, nameByUser);
+    }
+  }
+
+  return (
+    <KeysPanel
+      slug={slug}
+      isAdmin={isAdmin}
+      myKeys={myKeys}
+      otherGroups={otherGroups}
+    />
+  );
 }

@@ -71,6 +71,10 @@ If the tool is in the config's `hookCaptured` list, `log_run` refuses ("this too
 
 Lists the workspace's tools (slim shape: id, slug, name, type, status, credited minutes per run). Used to resolve slugs.
 
+### `list_metrics`
+
+Lists the workspace's business metric definitions (key, name, unit) via `GET /api/v1/metric-definitions`. No input. Use it to discover which keys the workspace tracks (e.g. `revenue_influenced`), then attach them as `metrics: {key: value}` when calling `log_run`.
+
 ### `get_summary`
 
 Workspace totals: runs and hours over the trailing 30 days, active tools, builder count. This is the full extent of what an ingest key can read; money, per-builder stats, and timeseries need a read-scoped key via the [Read API](api/read-api.md).

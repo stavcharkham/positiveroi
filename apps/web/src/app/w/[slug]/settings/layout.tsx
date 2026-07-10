@@ -3,9 +3,10 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SettingsNav } from "./settings-nav";
 
 /**
- * Settings is an admin surface: viewing and every mutation require the admin
- * role. Non-admins land back on the workspace home (requireMember redirects).
- * Each child page re-runs the guard — the layout gate is just the front door.
+ * Settings is reachable by every member: API keys are user-level, so builders
+ * and leads manage their own keys here. General, Members, and Public stay
+ * admin-only — each of those pages enforces requireMember(slug, "admin")
+ * itself; this layout only proves membership and trims the nav.
  */
 export default async function SettingsLayout({
   children,
@@ -15,16 +16,21 @@ export default async function SettingsLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  await requireMember(slug, "admin");
+  const { member } = await requireMember(slug);
+  const isAdmin = member.role === "admin";
 
   return (
     <div className="mx-auto w-full max-w-2xl">
       <PageHeader
         title="Settings"
-        description="Workspace, members, API keys, and your public page."
+        description={
+          isAdmin
+            ? "Workspace, members, API keys, and your public page."
+            : "Your API keys."
+        }
         className="pb-5"
       />
-      <SettingsNav slug={slug} />
+      <SettingsNav slug={slug} isAdmin={isAdmin} />
       <div className="py-8">{children}</div>
     </div>
   );

@@ -1,5 +1,11 @@
 import "server-only";
-import { EVENT_SOURCES, TRAILING_WINDOW_DAYS, type EventSource, type ToolType } from "@positiveroi/core";
+import {
+  EVENT_SOURCES,
+  TRAILING_WINDOW_DAYS,
+  effectiveMinutesSavedPerRun,
+  type EventSource,
+  type ToolType,
+} from "@positiveroi/core";
 import {
   resolvePeriod,
   timeseries,
@@ -117,6 +123,8 @@ export interface ToolRow {
   type: ToolType;
   status: "active" | "archived";
   minutes_saved_per_run: number;
+  /** Builder-set credit; null = the suggested Undercount applies. */
+  minutes_saved_override: number | null;
   raw_estimate_minutes: number;
   high_judgment: boolean;
 }
@@ -128,7 +136,7 @@ export async function toolsOwnedBy(
   const admin = getAdminClient();
   const { data, error } = await admin
     .from("tools")
-    .select("id, name, slug, type, status, minutes_saved_per_run, raw_estimate_minutes, high_judgment")
+    .select("id, name, slug, type, status, minutes_saved_per_run, minutes_saved_override, raw_estimate_minutes, high_judgment")
     .eq("workspace_id", workspaceId)
     .eq("owner_id", userId)
     .order("created_at", { ascending: true });
@@ -184,7 +192,10 @@ export async function myToolCards(
       id: t.id,
       name: t.name,
       type: t.type,
-      minutesPerRun: Number(t.minutes_saved_per_run),
+      minutesPerRun: effectiveMinutesSavedPerRun(
+        Number(t.minutes_saved_per_run),
+        t.minutes_saved_override === null ? null : Number(t.minutes_saved_override),
+      ),
       hoursInPeriod: totals?.hours ?? 0,
       runsInPeriod: totals?.runs ?? 0,
       sparkline: sparklines[i] ?? [],

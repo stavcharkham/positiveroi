@@ -80,6 +80,10 @@ function UndercountedTag({ className }: { className?: string }) {
           Every baseline takes a 40% confidence cut, then a further 50% cut
           when a human decision stays in the loop.
         </p>
+        <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-foreground-secondary">
+          Builders can set their own number; those are labeled builder-set on
+          their receipts.
+        </p>
         <Link
           href="/methodology"
           className="mt-3 inline-block text-[0.8125rem] font-medium text-accent hover:underline"

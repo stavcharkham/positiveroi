@@ -12,7 +12,7 @@ POST /api/ingest
 Authorization: Bearer roi_ingest_...
 ```
 
-Requires an API key with **ingest** scope (Settings → API Keys). Revoked keys get `401` on the next request. What an ingest key can and cannot see is listed in the [scopes table](read-api.md#key-scopes).
+Requires an API key with **ingest** scope. Every member creates their own in Settings → API Keys. Keys belong to the person who made them, so revoking one never breaks anyone else's tools. Revoked keys get `401` on the next request. What an ingest key can and cannot see is listed in the [scopes table](read-api.md#key-scopes).
 
 ## Request body
 

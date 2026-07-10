@@ -112,3 +112,29 @@ export async function getBaselineHistory(
   if (error) throw new Error(`baseline history lookup failed: ${error.message}`);
   return (data ?? []) as BaselineChange[];
 }
+
+export interface CreditChange {
+  id: string;
+  changed_by: string | null;
+  created_at: string;
+  /** null = the row that first set a credit. */
+  old_value: number | null;
+  /** null = reset to the suggested Undercount. */
+  new_value: number | null;
+}
+
+export async function getCreditHistory(
+  admin: SupabaseClient,
+  workspaceId: string,
+  toolId: string,
+): Promise<CreditChange[]> {
+  const { data, error } = await admin
+    .from("credit_history")
+    .select("id, changed_by, created_at, old_value, new_value")
+    .eq("workspace_id", workspaceId)
+    .eq("tool_id", toolId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) throw new Error(`credit history lookup failed: ${error.message}`);
+  return (data ?? []) as CreditChange[];
+}

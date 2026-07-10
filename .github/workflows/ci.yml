@@ -43,6 +43,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - uses: supabase/setup-cli@v1
+        env:
+          # Authenticated release lookup — unauthenticated runners hit the
+          # GitHub API rate limit resolving "latest".
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           version: latest
       - name: Ensure supabase config exists

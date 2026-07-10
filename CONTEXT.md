@@ -31,6 +31,13 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Technical decisions (Claude)
 
+**2026-07-10, review round + time ranges**
+
+- Credit edit permission: the tool's **owner** edits their own credit (that is Stav's "builder sets it later in the dashboard"); leads/admins edit any. Baseline edit stays lead/admin-only.
+- `GET /api/v1/tools` returns the **effective** credited minutes in `minutes_saved_per_run` (builder-set when present, else the suggestion) — same number new runs snapshot; field name and meaning unchanged.
+- Custom date range rides the existing single `?period=` param as `from..to` (e.g. `2026-05-01..2026-06-12`) so every drill-down link keeps threading one param; the REST read API keeps its documented separate `from`/`to`. `quarter` stays as the URL/API value (back-compat) but is pinned to a trailing 90 days and labeled "Last 90 days".
+- `tool_totals` trailing-30d window ends at now **+5 minutes** (the same future tolerance the occurred_at bounds allow): DB-defaulted `occurred_at` comes from Postgres's clock, and with the app clock behind it, a just-logged run was missing from its own totals. Caught by the live suite.
+
 **2026-07-08, build execution** (deviations and refinements recorded while the tracks were built)
 
 - `verifyApiKey` also returns `createdBy` — POST /api/v1/tools needs it as the tool's `owner_id`.

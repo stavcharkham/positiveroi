@@ -31,7 +31,7 @@ Headline numbers for a period.
 
 | Param | Values | Notes |
 |---|---|---|
-| `period` | `week` \| `month` \| `quarter` | Convenience ranges in the workspace timezone |
+| `period` | `week` \| `month` \| `quarter` | Trailing 7 / 30 / 90 days |
 | `from`, `to` | `YYYY-MM-DD` | Explicit range, workspace timezone. Omit everything for all-time |
 
 ```bash

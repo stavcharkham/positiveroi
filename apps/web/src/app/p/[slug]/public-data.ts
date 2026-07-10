@@ -24,8 +24,8 @@ export const getCachedPublicWorkspace = cache((slug: string) =>
   getPublicWorkspace(slug),
 );
 
-/** The public window: trailing quarter, resolved like every dashboard read. */
-export function publicQuarter(workspace: WorkspaceRow): ResolvedPeriod {
+/** The public window: trailing 90 days, resolved like every dashboard read. */
+export function publicWindow(workspace: WorkspaceRow): ResolvedPeriod {
   return resolvePeriod(
     { period: "quarter" },
     workspace.timezone,
@@ -37,7 +37,7 @@ export async function getPublicImpactData(
   workspace: WorkspaceRow,
 ): Promise<PublicImpactData> {
   const admin = getAdminClient();
-  const period = publicQuarter(workspace);
+  const period = publicWindow(workspace);
 
   const [stats, buckets, boards, multipliers] = await Promise.all([
     workspaceStats(workspace.id, period, admin),

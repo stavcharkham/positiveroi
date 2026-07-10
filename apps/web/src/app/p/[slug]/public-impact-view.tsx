@@ -16,7 +16,7 @@ export interface PublicImpactData {
   workspaceName: string;
   /** ISO 4217 code used only for formatting the money figure. */
   currency: string;
-  /** Credited hours, trailing quarter, is_test excluded. */
+  /** Credited hours, trailing 90 days, is_test excluded. */
   hours: number;
   runs: number;
   builders: number;
@@ -27,7 +27,7 @@ export interface PublicImpactData {
   trend: number[];
   /** Top tools by credited hours — names and hours only. */
   topTools: { name: string; hours: number }[];
-  /** Trailing-quarter window, ISO timestamps. */
+  /** Trailing-90-day window, ISO timestamps. */
   periodFrom: string;
   periodTo: string;
 }
@@ -87,14 +87,14 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
 
         <section className="mt-14 sm:mt-20">
           <p className="font-mono text-xs uppercase tracking-wider text-foreground-muted">
-            {formatRange(data.periodFrom, data.periodTo)} · trailing quarter
+            {formatRange(data.periodFrom, data.periodTo)} · trailing 90 days
           </p>
           <h1 className="mt-4 max-w-2xl text-balance text-4xl font-medium leading-[1.12] tracking-tight sm:text-[3.25rem]">
             {data.workspaceName}&rsquo;s builders saved{" "}
             <span className="numeral whitespace-nowrap text-accent">
               {formatHours(data.hours)} hours
             </span>{" "}
-            this quarter
+            in the last 90 days
           </h1>
           <div className="mt-6 flex flex-wrap items-start gap-x-3 gap-y-2">
             <UndercountedTag className="mt-0.5" />
@@ -140,7 +140,7 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
               width={640}
               height={120}
               className="h-auto w-full"
-              aria-label="Credited hours saved per week over the trailing quarter"
+              aria-label="Credited hours saved per week over the trailing 90 days"
             />
           </div>
         </section>

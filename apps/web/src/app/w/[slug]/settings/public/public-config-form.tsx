@@ -83,7 +83,7 @@ function PublicConfigForm({
         <CardHeader>
           <CardTitle>Public impact page</CardTitle>
           <CardDescription>
-            A shareable proof page: hours saved this quarter, counted with the
+            A shareable proof page: hours saved in the last 90 days, counted with the
             Undercount. No names, no emails, nothing you do not opt into.
           </CardDescription>
         </CardHeader>
@@ -214,11 +214,11 @@ function PublicConfigForm({
         <CardContent className="space-y-3 pt-4">
           <CodeBlock
             caption="Markdown"
-            code={`[![Hours saved this quarter](${badgeUrl})](${publicUrl})`}
+            code={`[![Hours saved in the last 90 days](${badgeUrl})](${publicUrl})`}
           />
           <CodeBlock
             caption="HTML"
-            code={`<a href="${publicUrl}"><img src="${badgeUrl}" alt="Hours saved this quarter, counted with PositiveROI" /></a>`}
+            code={`<a href="${publicUrl}"><img src="${badgeUrl}" alt="Hours saved in the last 90 days, counted with PositiveROI" /></a>`}
           />
         </CardContent>
       </Card>

@@ -6,6 +6,7 @@ import {
 } from "@/lib/aggregates";
 import type { WorkspaceRow } from "@/lib/guards";
 import type { ToolType } from "@positiveroi/core";
+import { formatPeriodRange, normalizePeriodParam } from "../_lib/format";
 
 /**
  * Server-side helpers shared by the tools directory, wizard, and detail
@@ -43,14 +44,9 @@ export function firstParam(value: string | string[] | undefined): string | null 
   return value ?? null;
 }
 
-const PERIOD_NAMES = ["week", "month", "quarter"] as const;
-
 /** The raw ?period= value, but only when it is one we recognize. */
 export function validPeriodParam(sp: SearchParams): string | null {
-  const period = firstParam(sp.period);
-  return period && (PERIOD_NAMES as readonly string[]).includes(period)
-    ? period
-    : null;
+  return normalizePeriodParam(firstParam(sp.period) ?? undefined) ?? null;
 }
 
 /** resolvePeriod with a fall-back to all-time on a hand-mangled ?period=. */
@@ -71,15 +67,18 @@ export function safePeriod(sp: SearchParams, workspace: WorkspaceRow): ResolvedP
 
 /** Human label for the current period, e.g. "last 30 days". */
 export function periodLabel(sp: SearchParams): string {
-  switch (validPeriodParam(sp)) {
+  const value = validPeriodParam(sp);
+  switch (value) {
     case "week":
       return "last 7 days";
     case "month":
       return "last 30 days";
     case "quarter":
-      return "last quarter";
-    default:
+      return "last 90 days";
+    case null:
       return "all time";
+    default:
+      return formatPeriodRange(value);
   }
 }
 

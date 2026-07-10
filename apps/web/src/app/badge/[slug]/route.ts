@@ -1,11 +1,11 @@
 import { workspaceStats } from "@/lib/aggregates";
 import { getPublicWorkspace } from "@/lib/public-gate";
-import { publicQuarter } from "@/app/p/[slug]/public-data";
+import { publicWindow } from "@/app/p/[slug]/public-data";
 
 /**
  * Embeddable SVG badge. Resolves ONLY through getPublicWorkspace — unknown
  * or unpublished slugs 404 with no enumeration signal. The number comes from
- * the same trailing-quarter aggregate as the public page and the dashboards
+ * the same trailing-90-day aggregate as the public page and the dashboards
  * (is_test excluded in SQL). Self-contained: system fonts, brand token hexes
  * inlined per theme, no external requests.
  */
@@ -52,7 +52,7 @@ export async function GET(
   const workspace = await getPublicWorkspace(slug);
   if (!workspace) return new Response("Not found", { status: 404 });
 
-  const stats = await workspaceStats(workspace.id, publicQuarter(workspace));
+  const stats = await workspaceStats(workspace.id, publicWindow(workspace));
   const hours = new Intl.NumberFormat("en-US").format(Math.round(stats.hours));
 
   const themeParam = new URL(request.url).searchParams.get("theme");
@@ -69,11 +69,11 @@ export async function GET(
 function renderBadge(hours: string, t: BadgeTheme): string {
   // Widen slightly for large numbers so the text never clips.
   const width = 240 + Math.max(0, hours.length - 5) * 8;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="54" viewBox="0 0 ${width} 54" role="img" aria-label="${hours} hours saved this quarter, counted with PositiveROI">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="54" viewBox="0 0 ${width} 54" role="img" aria-label="${hours} hours saved in the last 90 days, counted with PositiveROI">
   <rect x="0.5" y="0.5" width="${width - 1}" height="53" rx="11.5" fill="${t.bg}" stroke="${t.border}"/>
   <rect x="12" y="13" width="28" height="28" rx="8" fill="${t.accentSoft}"/>
   <path transform="translate(18 19) scale(0.6667)" d="M13 2 4.5 13.5h5L10 22l8.5-11.5h-5L13 2Z" fill="${t.accent}"/>
-  <text x="52" y="25" font-family="${FONT_STACK}" font-size="13.5" font-weight="600" fill="${t.text}">${hours}<tspan font-size="11.5" font-weight="500"> hrs saved this quarter</tspan></text>
+  <text x="52" y="25" font-family="${FONT_STACK}" font-size="13.5" font-weight="600" fill="${t.text}">${hours}<tspan font-size="11.5" font-weight="500"> hrs saved · last 90 days</tspan></text>
   <text x="52" y="41" font-family="${FONT_STACK}" font-size="10" letter-spacing="0.3" fill="${t.muted}">PositiveROI · undercounted</text>
 </svg>
 `;

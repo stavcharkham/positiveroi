@@ -24,8 +24,23 @@ export type PeriodName = "week" | "month" | "quarter";
 export const PERIOD_DAYS: Record<PeriodName, number> = {
   week: 7,
   month: 30,
-  quarter: 91,
+  quarter: 90,
 };
+
+/**
+ * A custom range packed into one period value: "YYYY-MM-DD..YYYY-MM-DD".
+ * The dashboard threads a single ?period= param through every link, so the
+ * custom picker rides the same param; the REST read API keeps its documented
+ * separate from/to params (both forms resolve identically below).
+ */
+const CUSTOM_PERIOD_RE = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
+
+export function parseCustomPeriod(
+  value: string,
+): { from: string; to: string } | null {
+  const match = CUSTOM_PERIOD_RE.exec(value);
+  return match ? { from: match[1] as string, to: match[2] as string } : null;
+}
 
 export interface ResolvedPeriod {
   fromUtc: Date;
@@ -83,7 +98,8 @@ export function zonedDayStartUtc(dateStr: string, timeZone: string): Date {
 
 /**
  * Resolve query params into a UTC range.
- * - period=week|month|quarter: trailing 7/30/91 days ending now.
+ * - period=week|month|quarter: trailing 7/30/90 days ending now.
+ * - period="YYYY-MM-DD..YYYY-MM-DD": custom range, same semantics as from/to.
  * - from/to (YYYY-MM-DD): calendar days interpreted in the workspace
  *   timezone; `to` is inclusive (range ends at the start of the next day).
  * - neither: all-time, from workspace.created_at to now.
@@ -97,6 +113,10 @@ export function resolvePeriod(
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
   if (opts.period) {
+    const custom = parseCustomPeriod(opts.period);
+    if (custom) {
+      return resolvePeriod(custom, workspaceTimezone, workspaceCreatedAt, now);
+    }
     if (!(opts.period in PERIOD_DAYS)) {
       throw new PeriodError(
         `invalid period "${opts.period}" — expected week, month, or quarter`,

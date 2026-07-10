@@ -480,7 +480,7 @@ Package `@positiveroi/mcp-server`, stdio transport. Config: `~/.positiveroi/conf
 
 ## 7. Web app routes/IA + key screen specs
 
-Navigation: left sidebar — My Impact, Company, Tools, Builders, Metrics; Settings pinned bottom. Top bar: workspace switcher, **global period selector** (week / month / quarter / all-time — every number on screen obeys it), theme toggle. Builders land on `/w/[slug]/me`; leads/admins on `/w/[slug]`. Middleware redirects authed users with zero workspaces to `/onboarding`.
+Navigation: left sidebar — My Impact, Company, Tools, Builders, Metrics; Settings pinned bottom. Top bar: workspace switcher, **global period selector** (last 7 / 30 / 90 days / custom from-to range / all-time — every number on screen obeys it; the dashboard packs a custom range into the same `?period=` param as `from..to`), theme toggle. Builders land on `/w/[slug]/me`; leads/admins on `/w/[slug]`. Middleware redirects authed users with zero workspaces to `/onboarding`.
 
 **Onboarding** (`/onboarding`): one screen, 3 fields — workspace name (slug auto), hourly rate (default $60, "used to convert hours to money, changeable anytime"), your role. Timezone captured silently from `Intl.DateTimeFormat().resolvedOptions().timeZone`. Creation server action atomically creates workspace + admin member + seeded metric definitions + **a default ingest key** (plaintext shown once in wizard step 4). Then: skippable invite-link step → full-screen first-tool prompt → the wizard. Time-to-aha target: under 5 minutes with a test run.
 
@@ -498,9 +498,9 @@ Navigation: left sidebar — My Impact, Company, Tools, Builders, Metrics; Setti
 
 **Settings**: general (name, rate, currency, timezone, plan section: "Free while in beta — contact to upgrade"), members (list + link-invite create/revoke with use counts), keys (user-level: every member creates/revokes their own ingest keys; admins see everyone's grouped by owner, revoke any, and are the only role that can create read keys; scope, prefix, `last_used_at` — "never used" is the #1 onboarding debug signal), public (live preview of the real page behind a "not published" scrim, enable toggle, slug, show_tools/show_builders/show_money toggles, badge embed code).
 
-**Public page** (`/p/[slug]`, ISR 300s): headline "Acme's builders saved 340 hours this quarter" + `undercounted` tag → inline Undercount explainer; trend sparkline; runs measured / builders active / Multipliers earned (config-gated); optional top-tools (names + hours only). Footer "Counted with PositiveROI — the Undercount methodology" → landing; **not removable on hosted free tier**. Disabled/unknown slug → plain 404.
+**Public page** (`/p/[slug]`, ISR 300s): headline "Acme's builders saved 340 hours in the last 90 days" + `undercounted` tag → inline Undercount explainer; trend sparkline; runs measured / builders active / Multipliers earned (config-gated); optional top-tools (names + hours only). Footer "Counted with PositiveROI — the Undercount methodology" → landing; **not removable on hosted free tier**. Disabled/unknown slug → plain 404.
 
-**Badge** (`/badge/[slug]` with optional `.svg` suffix stripped, `?theme=light|dark`): flat server-templated SVG ~240×54, drawn lightning mark (no emoji), "340 hrs saved this quarter · PositiveROI", links to `/p/[slug]`, `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`.
+**Badge** (`/badge/[slug]` with optional `.svg` suffix stripped, `?theme=light|dark`): flat server-templated SVG ~240×54, drawn lightning mark (no emoji), "340 hrs saved · last 90 days · PositiveROI", links to `/p/[slug]`, `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`.
 
 **Landing** (`/`): hero "Your team is building AI tools. Prove what they're worth." with a **static screenshot** of the real dashboard (no live ticking); scroll-replayed Receipt animation (45 → 27 → 13.5); four capture types converging on one endpoint (curl + plugin install side by side); Multiplier ring block; public page/badge proof block; open-source MIT block (no live stars widget); CTA. Self-hosted deployments swap the CTA via `flags.ts`.
 

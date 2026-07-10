@@ -374,14 +374,14 @@ function ProofSection() {
             positiveroi.dev/p/acme
           </span>
           <p className="numeral mt-5 text-balance text-2xl leading-snug text-foreground sm:text-[1.75rem]">
-            Acme&rsquo;s builders saved 342 hours this quarter{" "}
+            Acme&rsquo;s builders saved 342 hours in the last 90 days{" "}
             <UndercountedTag className="translate-y-[-0.2em]" />
           </p>
           <RunsSparkline
             values={[3, 5, 4, 7, 6, 9, 8, 12, 11, 14, 13, 16]}
             width={224}
             height={40}
-            aria-label="Sample quarterly run trend"
+            aria-label="Sample 90-day run trend"
             className="mt-5"
           />
           <p className="mt-3 font-mono text-xs text-foreground-secondary">
@@ -406,7 +406,7 @@ function ProofSection() {
               <LightningMark />
               <span className="flex flex-col">
                 <span className="text-sm font-semibold leading-tight text-foreground">
-                  342 hrs saved this quarter
+                  342 hrs saved · last 90 days
                 </span>
                 <span className="font-mono text-[0.6875rem] leading-tight text-foreground-muted">
                   PositiveROI · undercounted

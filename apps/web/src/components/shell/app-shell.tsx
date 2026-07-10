@@ -37,6 +37,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  CUSTOM_PERIOD_PARAM_RE,
+  formatPeriodRange,
+} from "@/app/w/[slug]/_lib/format";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -260,7 +272,7 @@ function WorkspaceSwitcher({
 const PERIODS = [
   { value: "week", label: "Last 7 days" },
   { value: "month", label: "Last 30 days" },
-  { value: "quarter", label: "Last quarter" },
+  { value: "quarter", label: "Last 90 days" },
   { value: "all", label: "All time" },
 ] as const;
 
@@ -268,32 +280,114 @@ function PeriodSelector() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const value = searchParams.get("period") ?? "all";
+  const raw = searchParams.get("period");
+  const customActive = raw !== null && CUSTOM_PERIOD_PARAM_RE.test(raw);
+  const value = customActive ? "custom" : (raw ?? "all");
 
-  function onChange(next: string) {
+  const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [from, setFrom] = React.useState("");
+  const [to, setTo] = React.useState("");
+
+  function navigate(period: string | null) {
     const params = new URLSearchParams(searchParams.toString());
-    if (next === "all") params.delete("period");
-    else params.set("period", next);
+    if (period === null) params.delete("period");
+    else params.set("period", period);
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname);
   }
 
+  function onChange(next: string) {
+    if (next === "custom") {
+      // Prefill from the active range so "edit" starts where you are.
+      const match = raw ? CUSTOM_PERIOD_PARAM_RE.exec(raw) : null;
+      setFrom(match?.[1] ?? "");
+      setTo(match?.[2] ?? "");
+      setPickerOpen(true);
+      return;
+    }
+    navigate(next === "all" ? null : next);
+  }
+
+  const rangeValid = from !== "" && to !== "" && from <= to;
+
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger
-        className="h-8 w-[8.5rem] text-[0.8125rem]"
-        aria-label="Period — every number on screen follows it"
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent align="end">
-        {PERIODS.map((p) => (
-          <SelectItem key={p.value} value={p.value}>
-            {p.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+      <PopoverAnchor asChild>
+        <div className="flex items-center gap-1.5">
+          {customActive && (
+            <button
+              type="button"
+              onClick={() => onChange("custom")}
+              className="cursor-pointer whitespace-nowrap rounded-md border border-border bg-surface px-2 py-1.5 font-mono text-xs text-foreground-secondary transition-colors hover:border-accent/50 hover:text-foreground"
+              aria-label="Edit the custom date range"
+            >
+              {formatPeriodRange(raw)}
+            </button>
+          )}
+          <Select value={value} onValueChange={onChange}>
+            <SelectTrigger
+              className="h-8 w-[8.5rem] text-[0.8125rem]"
+              aria-label="Period — every number on screen follows it"
+            >
+              {value === "custom" ? <span>Custom range</span> : <SelectValue />}
+            </SelectTrigger>
+            <SelectContent align="end">
+              {PERIODS.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  {p.label}
+                </SelectItem>
+              ))}
+              <SelectItem value="custom">Custom range…</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </PopoverAnchor>
+      <PopoverContent align="end" className="w-64">
+        <p className="text-sm font-medium text-foreground">Custom range</p>
+        <p className="mt-0.5 text-xs text-foreground-muted">
+          Whole days in the workspace timezone; the end day counts.
+        </p>
+        <div className="mt-3 space-y-2.5">
+          <div className="space-y-1">
+            <Label htmlFor="period-from" className="text-xs">
+              From
+            </Label>
+            <Input
+              id="period-from"
+              type="date"
+              value={from}
+              max={to || undefined}
+              onChange={(e) => setFrom(e.target.value)}
+              className="h-8 text-[0.8125rem]"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="period-to" className="text-xs">
+              To
+            </Label>
+            <Input
+              id="period-to"
+              type="date"
+              value={to}
+              min={from || undefined}
+              onChange={(e) => setTo(e.target.value)}
+              className="h-8 text-[0.8125rem]"
+            />
+          </div>
+        </div>
+        <Button
+          size="sm"
+          className="mt-3 w-full"
+          disabled={!rangeValid}
+          onClick={() => {
+            navigate(`${from}..${to}`);
+            setPickerOpen(false);
+          }}
+        >
+          Apply
+        </Button>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -34,7 +34,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 // ---------------------------------------------------------------------------
 
 export function periodFromParam(
-  name: PeriodName | undefined,
+  name: string | undefined,
   workspace: Pick<WorkspaceRow, "timezone" | "created_at">,
 ): ResolvedPeriod {
   try {

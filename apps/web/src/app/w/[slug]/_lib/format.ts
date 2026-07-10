@@ -1,5 +1,4 @@
 import type { MetricUnit } from "@positiveroi/core";
-import type { PeriodName } from "@/lib/aggregates";
 
 /**
  * Display formatting shared by the dashboard pages. Client-safe (no
@@ -13,33 +12,61 @@ const oneDecimalFmt = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 });
 
-/** Sanitize the ?period= search param. Anything unknown means all-time. */
+/** "YYYY-MM-DD..YYYY-MM-DD" — a custom range packed into one period value. */
+export const CUSTOM_PERIOD_PARAM_RE =
+  /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
+
+/**
+ * Sanitize the ?period= search param: a named period or a custom
+ * "from..to" range. Anything unknown means all-time.
+ */
 export function normalizePeriodParam(
   raw: string | string[] | undefined,
-): PeriodName | undefined {
+): string | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
   if (value === "week" || value === "month" || value === "quarter") return value;
+  if (value && CUSTOM_PERIOD_PARAM_RE.test(value)) return value;
   return undefined;
 }
 
+/** "May 1 – Jun 12" (years only when they differ from today's). */
+export function formatPeriodRange(value: string): string {
+  const match = CUSTOM_PERIOD_PARAM_RE.exec(value);
+  if (!match) return value;
+  return `${rangeDate(match[1] as string)} – ${rangeDate(match[2] as string)}`;
+}
+
+function rangeDate(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  const sameYear = d.getUTCFullYear() === new Date().getUTCFullYear();
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+    timeZone: "UTC",
+  }).format(d);
+}
+
 /** "in the last 30 days" / "all time" — reads naturally after a noun. */
-export function periodLabel(name: PeriodName | undefined): string {
+export function periodLabel(name: string | undefined): string {
   switch (name) {
     case "week":
       return "in the last 7 days";
     case "month":
       return "in the last 30 days";
     case "quarter":
-      return "in the last quarter";
-    default:
+      return "in the last 90 days";
+    case undefined:
       return "all time";
+    default:
+      return formatPeriodRange(name);
   }
 }
 
 /** Carry the global period selector across drill-down links. */
-export function withPeriod(href: string, name: PeriodName | undefined): string {
+export function withPeriod(href: string, name: string | undefined): string {
   if (!name) return href;
-  return `${href}${href.includes("?") ? "&" : "?"}period=${name}`;
+  return `${href}${href.includes("?") ? "&" : "?"}period=${encodeURIComponent(name)}`;
 }
 
 /** Headline hours: 1 decimal under 100, whole + grouped above. */

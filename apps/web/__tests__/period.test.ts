@@ -9,7 +9,7 @@ describe("resolvePeriod — named periods", () => {
   it.each([
     ["week", 7],
     ["month", 30],
-    ["quarter", 91],
+    ["quarter", 90],
   ] as const)("%s is a trailing %i-day window ending now", (period, days) => {
     const r = resolvePeriod({ period }, "UTC", CREATED, NOW);
     expect(r.toUtc.getTime()).toBe(NOW.getTime());
@@ -84,6 +84,35 @@ describe("resolvePeriod — custom from/to in workspace timezone", () => {
       resolvePeriod({ from: "2026-07-05", to: "2026-07-01" }, "UTC", CREATED, NOW),
     ).toThrow(PeriodError);
     expect(() => zonedDayStartUtc("2026-07-01", "Not/AZone")).toThrow(PeriodError);
+  });
+});
+
+describe("resolvePeriod — packed custom period (dashboard ?period=from..to)", () => {
+  it("resolves identically to explicit from/to", () => {
+    const packed = resolvePeriod(
+      { period: "2026-07-01..2026-07-02" },
+      "Asia/Jerusalem",
+      CREATED,
+      NOW,
+    );
+    const explicit = resolvePeriod(
+      { from: "2026-07-01", to: "2026-07-02" },
+      "Asia/Jerusalem",
+      CREATED,
+      NOW,
+    );
+    expect(packed.fromUtc.getTime()).toBe(explicit.fromUtc.getTime());
+    expect(packed.toUtc.getTime()).toBe(explicit.toUtc.getTime());
+    expect(packed.periodDays).toBe(explicit.periodDays);
+  });
+
+  it("rejects inverted and malformed packed ranges", () => {
+    expect(() =>
+      resolvePeriod({ period: "2026-07-05..2026-07-01" }, "UTC", CREATED, NOW),
+    ).toThrow(PeriodError);
+    expect(() =>
+      resolvePeriod({ period: "2026-07-01..bogus" }, "UTC", CREATED, NOW),
+    ).toThrow(PeriodError);
   });
 });
 

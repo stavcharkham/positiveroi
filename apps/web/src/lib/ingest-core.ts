@@ -193,7 +193,14 @@ export async function ingestEvents(
   }
 
   // Trailing-30d totals for each touched tool's owner + lazy badge award.
+  // The window's exclusive end gets the same 5-minute future tolerance the
+  // occurred_at bounds allow: DB-defaulted occurred_at comes from Postgres's
+  // clock, and if that runs ahead of this server's, the run just inserted
+  // would otherwise be missing from its own tool_totals.
   const totalsNow = new Date();
+  const toIso = new Date(
+    totalsNow.getTime() + OCCURRED_AT_MAX_FUTURE_MS,
+  ).toISOString();
   const fromIso = new Date(
     totalsNow.getTime() - TRAILING_WINDOW_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -202,7 +209,7 @@ export async function ingestEvents(
       ws: ctx.workspaceId,
       p_owner: tool.owner_id,
       p_from: fromIso,
-      p_to: totalsNow.toISOString(),
+      p_to: toIso,
     });
     if (error) continue; // totals are advisory; never fail accepted events
     const minutes = Number(data ?? 0);

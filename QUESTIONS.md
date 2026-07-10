@@ -1,12 +1,8 @@
 # QUESTIONS: open items for Stav
 
-Blocking items first. Each has the exact steps so it can be done in one sitting.
+Nothing is blocking the release. Each item has the exact steps so it can be done in one sitting.
 
-## 1. Credited-number edit bounds (blocks the adjustments batch)
-
-Decided 2026-07-10: the final credited minutes/run is editable — the Undercount becomes a suggested default with an explanation, not a lock. One sub-decision remains: how far can a builder move the number? Options presented in chat (cap at baseline with honest labeling above the suggestion, downward-only, or fully free).
-
-## 2. Google OAuth client (optional — deferred by Stav 2026-07-10)
+## 1. Google OAuth client (optional — deferred by Stav 2026-07-10)
 
 Magic-link login works without it. Steps preserved for later:
 
@@ -25,6 +21,9 @@ The login page shows the Google button automatically once the provider is on; no
 - **Stripe** account + when the $29 tier gets enforced (v1 pricing is copy only).
 
 ## Resolved (log)
+
+**2026-07-10, third round:**
+- Credited-number edit bounds: **fully free within the 480-minute schema ceiling** (one 8h workday per run — a typo/abuse bound, not distrust). Built and committed (`f3fc260`): wizard + settings editors, credit_history audit, builder-set labels.
 
 **2026-07-10, second review round:**
 - Service role key: pasted locally by Stav; all 54 tests green including the 7 live-Supabase ones.

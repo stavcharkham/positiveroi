@@ -2,17 +2,17 @@
 
 Build order follows [docs/architecture.md](docs/architecture.md) §11. Phase 1 froze the contracts; Phase 2 runs as parallel tracks; Phase 3 is the integration gate before deploy.
 
-## State (updated 2026-07-08)
+## State (updated 2026-07-10)
 
-Backend complete and pushed (commits `bef9e60` foundation → `d8766f4` docs/CI → `37e23c1` capture clients → `577b14e` web spine). 100+ tests green across core (21), web spine (47), sdk (11), mcp-server (15), plugin (10). Schema + aggregate RPCs applied to the live Supabase project (`mzkvhihqykzeecbwoigu`). **In progress:** frontend foundation (design system, shell, auth, onboarding) — if the working tree has uncommitted `apps/web` files, that agent's work landed after this update: verify `pnpm -F web typecheck lint build`, then commit. **Next:** frontend page tracks below, then the integration gate, then deploy.
+Backend, frontend, and the review-round batch are all committed (latest `f3fc260`: builder-set credit, user-level keys, MCP `list_metrics`). Migrations 0001–0009 applied to the live Supabase project (`mzkvhihqykzeecbwoigu`); the service role key is in `.env.local`, so the full live suite runs. Tests green: core 27, web 60 (7 live), sdk 11, mcp-server 19, plugin 10. **Next:** the time-ranges change (rename quarter → last 90 days, add custom from/to picker — decided 2026-07-10), then a full code review, then the integration gate, then deploy.
 
 ## Phase 0: prerequisites
 
 - [x] Decision Zero: name = PositiveROI (scope `@positiveroi`, prefixes `roi_ingest_`/`roi_read_`, config `~/.positiveroi/`, plugin `positiveroi`)
 - [x] Supabase project reachable
-- [ ] Google Cloud OAuth client + Supabase redirect URLs (Stav; see QUESTIONS.md, magic link works meanwhile)
-- [ ] Vercel production project + env vars (see QUESTIONS.md)
-- [ ] SUPABASE_SERVICE_ROLE_KEY into `apps/web/.env.local` + Vercel (Stav; unlocks the live integration suite)
+- [ ] Google Cloud OAuth client + Supabase redirect URLs (deferred by Stav 2026-07-10; magic link is the launch auth)
+- [ ] Vercel production project + env vars (connector authenticated; Claude creates the project at release)
+- [x] SUPABASE_SERVICE_ROLE_KEY in `apps/web/.env.local` (still needed in Vercel env at release)
 
 ## Phase 1: foundation (frozen) — DONE
 
@@ -47,22 +47,20 @@ Backend complete and pushed (commits `bef9e60` foundation → `d8766f4` docs/CI 
 - [x] `.github/`: CI workflow (lint/typecheck/test/build, DB job soft-fail with TODO, plugin tests), release workflow (disabled until npm org), issue + PR templates
 - [ ] CI green on main (verify on GitHub after next push; make the DB job a required check once green)
 
-### Track D: frontend
+### Track D: frontend — DONE (commits e02a72c, 3116a6b, 94c283e)
 
-#### D0: foundation (design system, shell, auth) — IN PROGRESS (agent running at time of update)
+- [x] D0 foundation: design tokens (light+dark), `components/ui` library, product components, login (magic link), `/auth/callback`, invite accept, onboarding with key-shown-once, app shell with period selector + theme toggle
+- [x] D1 Tools: directory, 4-step wizard with animated Receipt, live first-run listener, test-run + manual-log actions, tool detail tabs with audited baseline edit + archive
+- [x] D2 Dashboards: builder + company + builders leaderboard + metrics pages
+- [x] D3 Settings + public: general, members + link invites, keys, public config with live preview, `/p/[slug]` + SVG badge, `/admin` stub
+- [x] D4 Marketing: landing, `/methodology`, `/pricing`
 
-- [ ] Design tokens (light+dark) + `components/ui` library + product components (StatTile, MultiplierRing, Receipt, SourceBadge, TierBadge, RunsSparkline, EmptyState)
-- [ ] Login (magic link; Google behind `NEXT_PUBLIC_AUTH_GOOGLE=true`), `/auth/callback`, invite accept `/invite/[token]`
-- [ ] Onboarding: workspace create (admin member, seeded metrics, default ingest key shown once), silent timezone
-- [ ] App shell `/w/[slug]`: sidebar (My Impact / Company / Tools / Builders / Metrics / Settings), workspace switcher, global `?period=` selector, theme toggle
+### Track E: review round (Stav's product review, 2026-07-10) — DONE (commit f3fc260)
 
-#### D1–D4: pages (launch as parallel agents AFTER D0 is committed; each gets D0's component inventory)
-
-- [ ] D1 Tools: directory, 4-step registration wizard with animated Receipt, live first-run listener (3s poll), test-run + manual-log server actions; tool detail tabs (overview with per-source counts, runs, setup snippets, settings with audited baseline edit + archive)
-- [ ] D2 Dashboards: builder (hero stats, Multiplier Ring, tool cards, recent-runs strip, drill-downs) + company (4 headline stats, trend chart, metric tiles, leaderboards, Gone Quiet, lazy badge award) + builders leaderboard page + metrics page
-- [ ] D3 Settings + public: general, members + link invites, keys (plaintext-once), public config with live preview; public page `/p/[slug]` + SVG badge `/badge/[slug]` through `public-gate.ts` with cache headers; `/admin` stub (hosted flag)
-- [ ] D4 Marketing: landing, `/methodology`, `/pricing` (hosted flag); replace placeholder `src/app/page.tsx`
-- [ ] Empty states per PRD screen table (all tracks)
+- [x] Builder-set credit: wizard credit editor, settings credit panel (owner or lead/admin), `credit_history` audit, builder-set labels on receipts/drill-downs, migration 0009 applied to prod
+- [x] User-level API keys: members manage their own, admins see all grouped by owner, read keys admin-only
+- [x] MCP `list_metrics` + `GET /api/v1/metric-definitions` (both scopes)
+- [ ] Time ranges: rename quarter → last 90 days, add custom from/to picker (all-time stays default)
 
 ## Phase 3: integration gate (evidence, not "should work")
 

@@ -78,6 +78,7 @@ Backend, frontend, and the review-round batch are all committed (latest `f3fc260
 
 ## Deploy
 
-- [ ] Checkpoint commit, Vercel production deploy (.vercel.app)
-- [ ] Live smoke test: G1 loop against production
+- [x] Vercel project `positiveroi` created (Deep33 org, prj_AaoJ2kVuzZ048EiDcARmjUY57fBV). Monorepo build: root `apps/web`, install + `turbo build --filter=web` from the workspace root. Env set (Supabase URL/anon/service-role, HOSTED_ADMIN_EMAILS, NEXT_PUBLIC_DEPLOYMENT=hosted) on all targets.
+- [x] **Preview deployed and smoke-tested 2026-07-11: 28/28 gate checks pass against the live Vercel runtime** (SSR dashboards, all API routes, ingest, read-API scopes, CORS, public page + badge). URL: `positiveroi-539jymeoa-deep33.vercel.app`. (A bare `vercel deploy` auto-promoted the first build to production; the production aliases were removed immediately, so `positiveroi.vercel.app` 404s — **not launched**, per Stav's "preview first" choice.)
+- [ ] **Production promotion (Stav's go/no-go).** At promote: `vercel --prod`, then add the production URL to Supabase Auth → URL Configuration → Redirect URLs so magic-link works (the only thing the smoke test couldn't cover — it used password sign-in). positiveroi.dev not purchased yet, so the launch URL would be `positiveroi.vercel.app`.
 - [ ] Post-launch: seed demo workspace, link from README

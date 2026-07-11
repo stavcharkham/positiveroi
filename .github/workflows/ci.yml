@@ -65,9 +65,11 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_ANON_KEY="${ANON_KEY:-${SUPABASE_ANON_KEY:-}}"
           export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-${SUPABASE_SERVICE_ROLE_KEY:-}}"
           export DATABASE_URL="${DB_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}"
+          # Diagnostics so a failure here is debuggable from annotations alone.
+          echo "resolved URL=$NEXT_PUBLIC_SUPABASE_URL  service-key set: $([ -n "$SUPABASE_SERVICE_ROLE_KEY" ] && echo yes || echo no)"
           # github-actions reporter surfaces failures as annotations readable
           # without log access; default reporter keeps the full log readable.
-          pnpm --filter web exec vitest run --reporter=default --reporter=github-actions
+          pnpm --filter web test -- --reporter=default --reporter=github-actions
 
   plugin:
     name: Claude plugin tests

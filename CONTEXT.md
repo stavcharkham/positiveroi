@@ -31,6 +31,13 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Technical decisions (Claude)
 
+**2026-07-11, deep review pass**
+
+- Ran a 10-lens security + quality review (each finding verified by 3 adversarial skeptics): 32 real defects, all fixed. Notable: a backslash open-redirect in `safeNextPath`, no rate limit on `POST /api/v1/tools`, calendar-invalid custom date ranges crashing dashboards, and the SDK throwing on insecure-context browsers where `crypto.randomUUID` is undefined. Full list and the fix commit: `18ba492`.
+- Server actions across the app now wrap their awaited call in try/catch+finally — a rejected action (network blip) previously left the button spinning forever.
+- Hook queue drain keeps events on 5xx (nothing judged) and enqueues with an atomic append; the per-fetch timeout dropped to 2s so two sequential POSTs fit the 5s hook budget.
+- CI fixes: `lint` now depends on `^build` (mcp-server/sdk lint is `tsc` and needs core's dist cold); DB job boots the full local stack and authenticates the Supabase CLI release lookup.
+
 **2026-07-10, review round + time ranges**
 
 - Credit edit permission: the tool's **owner** edits their own credit (that is Stav's "builder sets it later in the dashboard"); leads/admins edit any. Baseline edit stays lead/admin-only.

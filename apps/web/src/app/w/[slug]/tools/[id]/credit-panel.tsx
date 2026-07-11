@@ -3,7 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RAW_ESTIMATE_MAX_DASHBOARD } from "@positiveroi/core";
+import {
+  RAW_ESTIMATE_MAX_DASHBOARD,
+  normalizeCreditOverride,
+} from "@positiveroi/core";
 import { Button } from "@/components/ui/button";
 import { CreditField } from "../credit-field";
 import { fmtNum } from "../tool-meta";
@@ -32,24 +35,31 @@ function CreditPanel({
   const [credit, setCredit] = React.useState<number | null>(initialOverride);
   const [saving, setSaving] = React.useState(false);
 
-  const dirty = credit !== initialOverride;
+  // Compare on the normalized value: a typed number equal to the suggestion
+  // stores as null (no override), so it must not read as a pending change.
+  const dirty = normalizeCreditOverride(suggested, credit) !== initialOverride;
   const valid =
     credit === null || (credit > 0 && credit <= RAW_ESTIMATE_MAX_DASHBOARD);
 
   async function save() {
     setSaving(true);
-    const result = await updateCreditAction(workspaceSlug, toolId, {
-      creditMinutes: credit,
-    });
-    if (result.ok && result.creditedPerRun !== undefined) {
-      toast.success(
-        `Credit saved. Each new run now credits ${fmtNum(result.creditedPerRun)} minutes.`,
-      );
-      router.refresh();
-    } else {
-      toast.error(result.error ?? "Could not save the credit.");
+    try {
+      const result = await updateCreditAction(workspaceSlug, toolId, {
+        creditMinutes: credit,
+      });
+      if (result.ok && result.creditedPerRun !== undefined) {
+        toast.success(
+          `Credit saved. Each new run now credits ${fmtNum(result.creditedPerRun)} minutes.`,
+        );
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not save the credit.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   }
 
   return (

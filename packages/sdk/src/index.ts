@@ -14,7 +14,7 @@ const TIMEOUT_MS = 5000;
 export interface LogRunOptions {
   /** Registered tool slug. */
   tool: string;
-  /** Only to LOWER credit for a partial run; clamped server-side. */
+  /** Per-run override; clamped server-side to [0, the tool's raw baseline]. */
   minutesSaved?: number;
   metrics?: Record<string, number>;
   metadata?: Record<string, unknown>;
@@ -29,13 +29,31 @@ export interface LogRunResult {
   multiplierProgress?: number;
 }
 
+/**
+ * A UUID-shaped random string. crypto.randomUUID is only defined in secure
+ * contexts, so a plain-HTTP internal tool (exactly this SDK's audience) would
+ * otherwise throw here and break the never-throws contract. Fall back to
+ * getRandomValues (available on insecure origins), then to Math.random.
+ */
+function randomId(): string {
+  const c = typeof crypto !== "undefined" ? crypto : undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (c?.getRandomValues) c.getRandomValues(bytes);
+  else for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80; // variant
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export class PositiveROI {
   constructor(private readonly config: { apiKey: string; endpoint: string }) {}
 
   async logRun(run: LogRunOptions): Promise<LogRunResult> {
     // Auto key (format pinned to @positiveroi/core sdkIdempotencyKey) — generated
     // once per call, so the retry below replays with the SAME key.
-    const idempotencyKey = run.idempotencyKey ?? `sdk:${crypto.randomUUID()}`;
+    const idempotencyKey = run.idempotencyKey ?? `sdk:${randomId()}`;
     const body = JSON.stringify({
       tool: run.tool,
       source: "sdk",

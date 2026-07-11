@@ -55,35 +55,45 @@ function SettingsPanel({
 
   async function save() {
     setSaving(true);
-    const result = await updateBaselineAction(workspaceSlug, toolId, {
-      rawEstimateMinutes: rawMinutes,
-      highJudgment,
-    });
-    if (result.ok && result.creditedPerRun !== undefined) {
-      toast.success(
-        `Baseline saved. Each run now credits ${fmtNum(result.creditedPerRun)} minutes.`,
-      );
-      router.refresh();
-    } else {
-      toast.error(result.error ?? "Could not save the baseline.");
+    try {
+      const result = await updateBaselineAction(workspaceSlug, toolId, {
+        rawEstimateMinutes: rawMinutes,
+        highJudgment,
+      });
+      if (result.ok && result.creditedPerRun !== undefined) {
+        toast.success(
+          `Baseline saved. Each run now credits ${fmtNum(result.creditedPerRun)} minutes.`,
+        );
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not save the baseline.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   }
 
   async function setStatus(next: "active" | "archived") {
     setStatusPending(true);
-    const result = await setToolStatusAction(workspaceSlug, toolId, next);
-    if (result.ok) {
-      toast.success(
-        next === "archived"
-          ? "Tool archived. New runs are rejected; history stays."
-          : "Tool unarchived. It accepts runs again.",
-      );
-      router.refresh();
-    } else {
-      toast.error(result.error ?? "Could not update the tool.");
+    try {
+      const result = await setToolStatusAction(workspaceSlug, toolId, next);
+      if (result.ok) {
+        toast.success(
+          next === "archived"
+            ? "Tool archived. New runs are rejected; history stays."
+            : "Tool unarchived. It accepts runs again.",
+        );
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not update the tool.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setStatusPending(false);
     }
-    setStatusPending(false);
   }
 
   return (

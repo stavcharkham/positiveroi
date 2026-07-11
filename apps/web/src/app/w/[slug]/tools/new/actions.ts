@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { slugify, toolCreateSchema, type EventSource } from "@positiveroi/core";
+import {
+  computeMinutesSavedPerRun,
+  normalizeCreditOverride,
+  slugify,
+  toolCreateSchema,
+  type EventSource,
+} from "@positiveroi/core";
 import { requireMember } from "@/lib/guards";
 import { ingestEvents } from "@/lib/ingest-core";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -45,6 +51,15 @@ export async function createToolAction(
   const data = parsed.data;
   const admin = getAdminClient();
 
+  // Normalize the credit against the suggestion server-side (never trust the
+  // client's normalization): a number equal to the Undercount is no override
+  // at all, so "builder-set" is only ever stored for numbers that differ.
+  const suggested = computeMinutesSavedPerRun(
+    data.raw_estimate_minutes,
+    data.high_judgment,
+  );
+  const override = normalizeCreditOverride(suggested, data.minutes_saved_override);
+
   // Builders always own what they register; leads and admins may assign.
   let ownerId = user.id;
   if (data.owner_id && data.owner_id !== user.id) {
@@ -81,7 +96,7 @@ export async function createToolAction(
         origin: "dashboard",
         raw_estimate_minutes: data.raw_estimate_minutes,
         high_judgment: data.high_judgment,
-        minutes_saved_override: data.minutes_saved_override ?? null,
+        minutes_saved_override: override,
       })
       .select("id, slug")
       .single();
@@ -110,14 +125,15 @@ export async function createToolAction(
   }
 
   // Same invariant for the credit: a builder-set number at creation gets its
-  // credit_history row, or the whole creation rolls back.
-  if (data.minutes_saved_override !== undefined) {
+  // credit_history row, or the whole creation rolls back. A credit equal to
+  // the suggestion normalized to null above — no override, no history row.
+  if (override !== null) {
     const { error: creditHistoryError } = await admin.from("credit_history").insert({
       workspace_id: workspace.id,
       tool_id: tool.id,
       changed_by: user.id,
       old_value: null,
-      new_value: data.minutes_saved_override,
+      new_value: override,
     });
     if (creditHistoryError) {
       await admin.from("tools").delete().eq("id", tool.id);

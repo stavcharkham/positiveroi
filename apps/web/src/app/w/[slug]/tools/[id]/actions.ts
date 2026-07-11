@@ -56,7 +56,7 @@ export async function updateBaselineAction(
   const admin = getAdminClient();
   const { data: tool } = await admin
     .from("tools")
-    .select("id, raw_estimate_minutes, high_judgment")
+    .select("id, raw_estimate_minutes, high_judgment, minutes_saved_override")
     .eq("workspace_id", workspace.id)
     .eq("id", toolId)
     .maybeSingle();
@@ -64,7 +64,14 @@ export async function updateBaselineAction(
 
   const oldRaw = Number(tool.raw_estimate_minutes);
   const oldJudgment = Boolean(tool.high_judgment);
-  const creditedPerRun = computeMinutesSavedPerRun(rawEstimateMinutes, highJudgment);
+  const override =
+    tool.minutes_saved_override === null ? null : Number(tool.minutes_saved_override);
+  // A builder-set override still wins after a baseline change — new runs credit
+  // it, not the new suggestion — so report the number runs will actually get.
+  const creditedPerRun = effectiveMinutesSavedPerRun(
+    computeMinutesSavedPerRun(rawEstimateMinutes, highJudgment),
+    override,
+  );
 
   if (oldRaw === rawEstimateMinutes && oldJudgment === highJudgment) {
     return { ok: true, creditedPerRun };

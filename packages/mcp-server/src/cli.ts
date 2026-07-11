@@ -12,7 +12,7 @@ async function main(): Promise<void> {
       [
         "positiveroi-mcp — PositiveROI MCP server (stdio)",
         "",
-        "Runs as an MCP stdio server exposing: register_tool, log_run, list_tools, get_summary.",
+        "Runs as an MCP stdio server exposing: register_tool, log_run, list_tools, list_metrics, get_summary.",
         `Config: ${configPath()} (env POSITIVEROI_API_KEY / POSITIVEROI_ENDPOINT override it).`,
         "",
         config

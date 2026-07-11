@@ -17,7 +17,9 @@ export const logRunInput = {
     .number()
     .min(0)
     .optional()
-    .describe("Only to LOWER credit for a partial run — the server clamps it to the tool's per-run credit."),
+    .describe(
+      "Per-run override for a run that did more or less than usual. The server clamps it to [0, the tool's raw baseline minutes]; leave it unset to credit the tool's normal per-run amount.",
+    ),
   metrics: z
     .record(z.number())
     .optional()

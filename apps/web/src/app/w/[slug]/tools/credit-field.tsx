@@ -55,6 +55,8 @@ function CreditField({ suggested, value, onChange, id, className }: CreditFieldP
             }
             className="numeral h-11 pr-16 text-center text-xl"
             aria-label="Credited minutes per run"
+            aria-invalid={invalid}
+            aria-describedby={invalid && id ? `${id}-error` : undefined}
           />
           <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center font-mono text-[0.6875rem] text-foreground-muted">
             min/run
@@ -72,7 +74,11 @@ function CreditField({ suggested, value, onChange, id, className }: CreditFieldP
       </div>
 
       {invalid ? (
-        <p className="rounded-md bg-warning-soft px-3 py-2 text-xs leading-relaxed text-warning">
+        <p
+          id={id ? `${id}-error` : undefined}
+          role="alert"
+          className="rounded-md bg-warning-soft px-3 py-2 text-xs leading-relaxed text-warning"
+        >
           The credit must be above 0 and at most {RAW_ESTIMATE_MAX_DASHBOARD}{" "}
           minutes per run.
         </p>

@@ -10,6 +10,7 @@ import {
 import type { WorkspaceRow } from "@/lib/guards";
 import { getPublicWorkspace } from "@/lib/public-gate";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { zeroFillSeries } from "@/app/w/[slug]/_lib/data";
 import type { PublicImpactData } from "./public-impact-view";
 
 /**
@@ -46,6 +47,11 @@ export async function getPublicImpactData(
     countMultipliers(workspace.id),
   ]);
 
+  // The RPC only returns weeks that had runs; zero-fill so the sparkline shows
+  // a true 13-week shape (quiet weeks read as 0, not collapsed away) — the same
+  // step every dashboard chart takes.
+  const weeklyMinutes = zeroFillSeries(buckets, "week", period).map((b) => b.minutes);
+
   return {
     workspaceName: workspace.name,
     currency: workspace.currency.trim(),
@@ -54,7 +60,7 @@ export async function getPublicImpactData(
     builders: stats.builders,
     multipliers,
     money: Math.round((stats.hours * workspace.hourly_rate_cents) / 100),
-    trend: buckets.map((b) => Math.round((b.minutes / 60) * 10) / 10),
+    trend: weeklyMinutes.map((m) => Math.round((m / 60) * 10) / 10),
     topTools: boards.tools
       .slice(0, 5)
       .map((t) => ({ name: t.name, hours: t.hours })),

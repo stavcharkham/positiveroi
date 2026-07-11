@@ -95,7 +95,8 @@ The uniqueness constraint is `(tool, idempotency_key)`. Omit the key and every r
 
 - **120 requests per minute per key.** Over the limit: `429` with a `Retry-After` header. Batch instead of hammering: 100 events in one request is one request.
 - Body over 256 KB: `413`.
-- `occurred_at` outside bounds, malformed fields, batch over 100: `422` with `error.details[]` listing each violation.
+- Malformed fields (bad datetime string, unknown source), batch over 100: `422` with `error.details[]` listing each violation.
+- An `occurred_at` that parses but falls outside the allowed window is a **per-event** `rejected` result with code `occurred_at_out_of_range` inside a `200` (the rest of the batch still lands) — not a `422`.
 
 ## Error envelope
 

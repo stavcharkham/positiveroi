@@ -15,12 +15,23 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const TIMEOUT_MS = 3000;
+// Per-fetch budget. The hook makes at most two sequential POSTs (drain, then
+// the live event), and hooks.json caps the whole invocation at 5s — so this
+// must stay under 2500ms or a hanging server could burn both fetches and get
+// the process killed before the live event's catch queues it.
+const TIMEOUT_MS = 2000;
 const QUEUE_MAX_BYTES = 1024 * 1024; // 1MB cap — oldest lines dropped first
 const DRAIN_BATCH = 20;
 // Pinned to @positiveroi/core CONFIG_DIR_NAME / ENV_API_KEY / ENV_ENDPOINT
@@ -124,14 +135,33 @@ function writeQueueLines(lines) {
 }
 
 function enqueue(event) {
-  const lines = readQueueLines();
-  lines.push(JSON.stringify(event));
-  let total = lines.reduce((n, line) => n + Buffer.byteLength(line, "utf8") + 1, 0);
-  while (lines.length > 0 && total > QUEUE_MAX_BYTES) {
-    total -= Buffer.byteLength(lines[0], "utf8") + 1; // drop oldest first
-    lines.shift();
+  const line = JSON.stringify(event) + "\n";
+  try {
+    mkdirSync(dirname(queueFilePath()), { recursive: true });
+    // Append, not read-modify-write: a single ≤4KB append is atomic on POSIX,
+    // so two concurrent Claude sessions queuing while offline never clobber
+    // each other's event. The 1MB cap is enforced lazily below and on drain.
+    appendFileSync(queueFilePath(), line);
+    let size = 0;
+    try {
+      size = statSync(queueFilePath()).size;
+    } catch {
+      /* just written — treat as within bounds */
+    }
+    if (size > QUEUE_MAX_BYTES) {
+      // Over cap — compact by dropping the oldest lines. A rare concurrent
+      // append here can at worst re-drop a line; it never loses a fresh one.
+      const lines = readQueueLines();
+      let total = lines.reduce((n, l) => n + Buffer.byteLength(l, "utf8") + 1, 0);
+      while (lines.length > 0 && total > QUEUE_MAX_BYTES) {
+        total -= Buffer.byteLength(lines[0], "utf8") + 1;
+        lines.shift();
+      }
+      writeQueueLines(lines);
+    }
+  } catch {
+    /* queueing is best-effort */
   }
-  writeQueueLines(lines);
 }
 
 /** Send up to DRAIN_BATCH queued events as one batch; remove them on success. */
@@ -152,10 +182,12 @@ async function drainQueue(config) {
     return;
   }
   try {
-    // Any HTTP response means the server received and judged the batch —
-    // idempotency keys make replays safe, and keeping server-rejected events
-    // would poison the queue. Only a network failure keeps them queued.
-    await post(config, { events });
+    const response = await post(config, { events });
+    // A 4xx (or a 2xx with per-event rejects) means the server judged the
+    // batch — idempotency keys make replays safe and keeping rejected events
+    // would poison the queue, so drop it. A 5xx means nothing was judged (a
+    // proxy or a crashed server), so keep it, matching the live-event path.
+    if (response.status >= 500) return;
     writeQueueLines(lines.slice(batch.length));
   } catch {
     /* still unreachable — leave the queue for the next invocation */

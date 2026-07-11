@@ -23,9 +23,16 @@ export async function landingPath(supabase: SupabaseClient): Promise<string> {
   return first.role === "builder" ? `/w/${slug}/me` : `/w/${slug}`;
 }
 
-/** Only allow same-origin relative paths for post-auth redirects. */
+/**
+ * Only allow same-origin relative paths for post-auth redirects. A leading
+ * "//" or "/\" is a protocol-relative URL that browsers (and new URL) resolve
+ * off-origin, so a backslash or control/whitespace char anywhere is rejected
+ * along with anything that is not a rooted path.
+ */
 export function safeNextPath(next: string | null | undefined): string | null {
   if (!next) return null;
   if (!next.startsWith("/") || next.startsWith("//")) return null;
+  // \ normalizes to / in browser URL parsing, so /\host → //host (off-origin).
+  if (/[\\\x00-\x1f\x7f]/.test(next)) return null;
   return next;
 }

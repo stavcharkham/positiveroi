@@ -59,14 +59,19 @@ function InvitePanel({
     setPending(true);
     setError(null);
     setUrl(null);
-    const result = await createInviteAction(slug, role);
-    if (result.ok && result.url) {
-      setUrl(result.url);
-      router.refresh();
-    } else {
-      setError(result.error ?? "Could not create the link.");
+    try {
+      const result = await createInviteAction(slug, role);
+      if (result.ok && result.url) {
+        setUrl(result.url);
+        router.refresh();
+      } else {
+        setError(result.error ?? "Could not create the link.");
+      }
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   async function copy() {
@@ -82,14 +87,19 @@ function InvitePanel({
 
   async function revoke(id: string) {
     setRevokingId(id);
-    const result = await revokeInviteAction(slug, id);
-    if (result.ok) {
-      toast.success("Invite revoked. The link no longer works.");
-      router.refresh();
-    } else {
-      toast.error(result.error ?? "Could not revoke the invite.");
+    try {
+      const result = await revokeInviteAction(slug, id);
+      if (result.ok) {
+        toast.success("Invite revoked. The link no longer works.");
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not revoke the invite.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setRevokingId(null);
     }
-    setRevokingId(null);
   }
 
   return (

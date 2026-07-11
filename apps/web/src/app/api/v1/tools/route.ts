@@ -6,6 +6,7 @@ import {
   toolCreateApiSchema,
 } from "@positiveroi/core";
 import { verifyApiKey } from "@/lib/api-keys";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { toolStats } from "@/lib/aggregates";
 import {
@@ -14,6 +15,7 @@ import {
   forbiddenScope,
   internalFrom,
   preflight,
+  rateLimited,
   unauthorized,
   validationFailed,
 } from "@/lib/errors";
@@ -128,6 +130,11 @@ export async function POST(request: NextRequest) {
     if (!key) return unauthorized(headers);
     if (key.scope !== "ingest") return forbiddenScope("ingest", headers);
 
+    // Same 120/min/key window ingestion enforces — this endpoint writes two
+    // rows per call, so it must not be an unthrottled bypass.
+    const limit = await checkRateLimit(key.keyId);
+    if (limit.limited) return rateLimited(limit.retryAfterSeconds, headers);
+
     let body: unknown;
     try {
       body = await request.json();
@@ -173,16 +180,24 @@ export async function POST(request: NextRequest) {
       throw new Error(`tool insert failed: ${error.message}`);
     }
 
-    // Baseline audit trail: creation row with null "old" values.
-    await supabase.from("baseline_history").insert({
-      workspace_id: key.workspaceId,
-      tool_id: tool.id,
-      changed_by: key.createdBy,
-      old_raw_estimate: null,
-      new_raw_estimate: input.raw_estimate_minutes,
-      old_high_judgment: null,
-      new_high_judgment: input.high_judgment,
-    });
+    // Baseline audit trail: creation row with null "old" values. Same
+    // invariant the dashboard plane enforces — every baseline set writes
+    // history, or the tool is rolled back (FKs cascade).
+    const { error: historyError } = await supabase
+      .from("baseline_history")
+      .insert({
+        workspace_id: key.workspaceId,
+        tool_id: tool.id,
+        changed_by: key.createdBy,
+        old_raw_estimate: null,
+        new_raw_estimate: input.raw_estimate_minutes,
+        old_high_judgment: null,
+        new_high_judgment: input.high_judgment,
+      });
+    if (historyError) {
+      await supabase.from("tools").delete().eq("id", tool.id);
+      throw new Error(`baseline audit insert failed: ${historyError.message}`);
+    }
 
     return Response.json(
       {

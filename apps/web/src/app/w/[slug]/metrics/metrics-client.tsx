@@ -262,9 +262,14 @@ function DeleteConfirm({
 
   React.useEffect(() => {
     let cancelled = false;
-    metricUsageAction(workspaceSlug, metric.id).then((res) => {
-      if (!cancelled) setCount(res.ok ? res.count : 0);
-    });
+    metricUsageAction(workspaceSlug, metric.id)
+      .then((res) => {
+        if (!cancelled) setCount(res.ok ? res.count : 0);
+      })
+      .catch(() => {
+        // Count is advisory; a failed lookup shows "0" rather than hanging.
+        if (!cancelled) setCount(0);
+      });
     return () => {
       cancelled = true;
     };
@@ -272,13 +277,18 @@ function DeleteConfirm({
 
   async function confirmDelete() {
     setDeleting(true);
-    const result = await deleteMetricDefinitionAction(workspaceSlug, metric.id);
-    setDeleting(false);
-    if (result.ok) {
-      toast.success(`Deleted "${metric.name}"`);
-      onDone();
-    } else {
-      toast.error(result.error ?? "Could not delete the metric.");
+    try {
+      const result = await deleteMetricDefinitionAction(workspaceSlug, metric.id);
+      if (result.ok) {
+        toast.success(`Deleted "${metric.name}"`);
+        onDone();
+      } else {
+        toast.error(result.error ?? "Could not delete the metric.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setDeleting(false);
     }
   }
 

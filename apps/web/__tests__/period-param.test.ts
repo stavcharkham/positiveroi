@@ -23,6 +23,16 @@ describe("normalizePeriodParam", () => {
     expect(normalizePeriodParam("2026-05-01")).toBeUndefined();
     expect(normalizePeriodParam(["month", "week"])).toBe("month");
   });
+
+  it("rejects calendar-invalid and inverted custom ranges (label must match data)", () => {
+    // Shape-valid but not real dates — would crash Intl.format if accepted.
+    expect(normalizePeriodParam("2026-13-99..2026-13-99")).toBeUndefined();
+    expect(normalizePeriodParam("2026-02-31..2026-03-01")).toBeUndefined();
+    // Inverted range: resolvePeriod falls back to all-time, so the label must too.
+    expect(normalizePeriodParam("2026-06-30..2026-06-01")).toBeUndefined();
+    // Equal endpoints are a valid one-day range.
+    expect(normalizePeriodParam("2026-06-01..2026-06-01")).toBe("2026-06-01..2026-06-01");
+  });
 });
 
 describe("periodLabel", () => {

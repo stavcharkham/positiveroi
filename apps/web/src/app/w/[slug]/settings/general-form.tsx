@@ -46,19 +46,24 @@ function GeneralForm({
     setPending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const result = await updateWorkspaceSettingsAction(slug, {
-      name: String(form.get("name") ?? ""),
-      hourlyRateDollars: Number(form.get("rate") ?? 0),
-      currency: String(form.get("currency") ?? ""),
-      timezone,
-    });
-    if (result.ok) {
-      toast.success("Settings saved.");
-      router.refresh();
-    } else {
-      setError(result.error ?? "Something went wrong. Try again.");
+    try {
+      const result = await updateWorkspaceSettingsAction(slug, {
+        name: String(form.get("name") ?? ""),
+        hourlyRateDollars: Number(form.get("rate") ?? 0),
+        currency: String(form.get("currency") ?? ""),
+        timezone,
+      });
+      if (result.ok) {
+        toast.success("Settings saved.");
+        router.refresh();
+      } else {
+        setError(result.error ?? "Something went wrong. Try again.");
+      }
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   return (

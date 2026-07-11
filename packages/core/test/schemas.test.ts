@@ -67,6 +67,18 @@ describe("tool creation caps", () => {
     expect(toolCreateApiSchema.parse({ ...base, raw_estimate_minutes: 120 })).toBeTruthy();
     expect(() => toolCreateApiSchema.parse({ ...base, raw_estimate_minutes: 121 })).toThrow();
   });
+
+  it("both paths reject a baseline with more than 2 decimal places", () => {
+    // >2dp would make the tool insert succeed then throw when its receipt is
+    // computed — both create schemas must fail before any write.
+    const base = { name: "T", type: "automation", high_judgment: false } as const;
+    expect(toolCreateSchema.parse({ ...base, raw_estimate_minutes: 45.5 })).toBeTruthy();
+    expect(() => toolCreateSchema.parse({ ...base, raw_estimate_minutes: 45.123 })).toThrow();
+    expect(toolCreateApiSchema.parse({ ...base, raw_estimate_minutes: 45.5 })).toBeTruthy();
+    expect(() =>
+      toolCreateApiSchema.parse({ ...base, raw_estimate_minutes: 45.123 }),
+    ).toThrow();
+  });
 });
 
 describe("creditOverrideSchema (builder-set credit)", () => {

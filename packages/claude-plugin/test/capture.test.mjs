@@ -36,8 +36,9 @@ function runHook(stdinPayload, { home, env = {} } = {}) {
   });
 }
 
-/** Local mock ingest server capturing raw request bodies. */
-async function startMockServer() {
+/** Local mock ingest server capturing raw request bodies. `status` overrides
+ * the response code (default 200) so drain behavior on 5xx can be tested. */
+async function startMockServer(status = 200) {
   const requests = [];
   const server = http.createServer((req, res) => {
     let raw = "";
@@ -49,14 +50,16 @@ async function startMockServer() {
         authorization: req.headers.authorization,
         rawBody: raw,
       });
-      res.writeHead(200, { "content-type": "application/json" });
+      res.writeHead(status, { "content-type": "application/json" });
       res.end(
-        JSON.stringify({
-          results: [{ status: "accepted", event_id: "55555555-5555-4555-8555-555555555555" }],
-          accepted: 1,
-          duplicates: 0,
-          rejected: 0,
-        }),
+        status >= 500
+          ? "upstream error"
+          : JSON.stringify({
+              results: [{ status: "accepted", event_id: "55555555-5555-4555-8555-555555555555" }],
+              accepted: 1,
+              duplicates: 0,
+              rejected: 0,
+            }),
       );
     });
   });
@@ -274,6 +277,38 @@ test("network down → event queued; next run drains the queue as a batch", asyn
     assert.equal(body.events.length, 1);
     assert.equal(body.events[0].idempotency_key, fixture.expected_key);
     assert.ok(!existsSync(queuePath), "queue file is removed after a successful drain");
+  } finally {
+    await mock.close();
+  }
+});
+
+test("drain keeps the queue on a 5xx (nothing was judged)", async () => {
+  const fixture = fixtures[0];
+  // Queue an event against a closed port.
+  const home = makeHome({
+    endpoint: "http://127.0.0.1:1",
+    apiKey: "roi_ingest_x",
+    tools: { "report-tool": "weekly-numbers-bot" },
+  });
+  await runHook({ prompt: fixture.prompt, session_id: fixture.session_id }, { home });
+  const queuePath = join(home, ".positiveroi", "queue.ndjson");
+  assert.ok(existsSync(queuePath), "event must be queued");
+
+  // Drain hits a 502 — the batch was never judged, so it must stay queued.
+  const mock = await startMockServer(502);
+  try {
+    const drain = await runHook(
+      { prompt: "unrelated", session_id: "sess-later" },
+      { home, env: { POSITIVEROI_ENDPOINT: mock.endpoint } },
+    );
+    assertSilent(drain);
+    assert.ok(mock.requests.length >= 1, "drain attempted a request");
+    assert.ok(
+      existsSync(queuePath),
+      "queue must survive a 5xx so the run is retried, not dropped",
+    );
+    const queued = readFileSync(queuePath, "utf8").split("\n").filter(Boolean).map(JSON.parse);
+    assert.equal(queued[0].idempotency_key, fixture.expected_key);
   } finally {
     await mock.close();
   }

@@ -25,7 +25,7 @@ Connect this machine to the user's PositiveROI workspace, then prove the connect
    }
    ```
 
-   Create the `~/.positiveroi` directory if it doesn't exist. Never print the full key back into the conversation — refer to it as `roi_ingest_...`.
+   Create the `~/.positiveroi` directory if it doesn't exist. The file holds a live ingest key, so lock its permissions down like any credential file: `chmod 700 ~/.positiveroi && chmod 600 ~/.positiveroi/config.json`. Never print the full key back into the conversation — refer to it as `roi_ingest_...`.
 
 3. **Verify LIVE — evidence, not "should work".**
    Call the `get_summary` tool from the **positiveroi** MCP server. The server re-reads the config on every call, so no restart is needed.

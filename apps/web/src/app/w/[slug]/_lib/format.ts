@@ -16,16 +16,37 @@ const oneDecimalFmt = new Intl.NumberFormat("en-US", {
 export const CUSTOM_PERIOD_PARAM_RE =
   /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
 
+/** Real calendar date (rejects 2026-13-99, 2026-02-31, …). */
+function isRealDate(dateStr: string): boolean {
+  const [y, m, d] = dateStr.split("-").map(Number) as [number, number, number];
+  const probe = new Date(Date.UTC(y, m - 1, d));
+  return (
+    probe.getUTCFullYear() === y &&
+    probe.getUTCMonth() === m - 1 &&
+    probe.getUTCDate() === d
+  );
+}
+
 /**
  * Sanitize the ?period= search param: a named period or a custom
- * "from..to" range. Anything unknown means all-time.
+ * "from..to" range. Anything unknown — including calendar-invalid or
+ * inverted ranges — means all-time, so the label always matches the data
+ * the server actually resolves.
  */
 export function normalizePeriodParam(
   raw: string | string[] | undefined,
 ): string | undefined {
   const value = Array.isArray(raw) ? raw[0] : raw;
   if (value === "week" || value === "month" || value === "quarter") return value;
-  if (value && CUSTOM_PERIOD_PARAM_RE.test(value)) return value;
+  if (value) {
+    const match = CUSTOM_PERIOD_PARAM_RE.exec(value);
+    if (match) {
+      const from = match[1] as string;
+      const to = match[2] as string;
+      // ISO dates compare correctly as strings; from must precede to.
+      if (isRealDate(from) && isRealDate(to) && from <= to) return value;
+    }
+  }
   return undefined;
 }
 
@@ -38,6 +59,8 @@ export function formatPeriodRange(value: string): string {
 
 function rangeDate(dateStr: string): string {
   const d = new Date(`${dateStr}T00:00:00Z`);
+  // Never throw on a bad value — Intl.format(Invalid Date) raises RangeError.
+  if (Number.isNaN(d.getTime())) return dateStr;
   const sameYear = d.getUTCFullYear() === new Date().getUTCFullYear();
   return new Intl.DateTimeFormat("en-US", {
     month: "short",

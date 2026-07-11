@@ -85,6 +85,17 @@ export function zonedDayStartUtc(dateStr: string, timeZone: string): Date {
   }
   const [y, m, d] = dateStr.split("-").map(Number) as [number, number, number];
   const naive = Date.UTC(y, m - 1, d, 0, 0, 0);
+  // Date.UTC rolls invalid components over (2026-02-31 → Mar 3) instead of
+  // failing; reject anything that did not round-trip so it maps to
+  // validation_failed rather than silently querying the wrong window.
+  const probe = new Date(naive);
+  if (
+    probe.getUTCFullYear() !== y ||
+    probe.getUTCMonth() !== m - 1 ||
+    probe.getUTCDate() !== d
+  ) {
+    throw new PeriodError(`invalid calendar date "${dateStr}"`);
+  }
   let offset: number;
   try {
     offset = tzOffsetMs(timeZone, new Date(naive));

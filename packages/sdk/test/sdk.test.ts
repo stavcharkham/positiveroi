@@ -166,6 +166,23 @@ describe("PositiveROI.logRun", () => {
       new PositiveROI({ apiKey: "k", endpoint: ENDPOINT }).logRun({ tool: "demo-tool" }),
     ).resolves.toEqual({ ok: false });
   });
+
+  it("NEVER throws when crypto.randomUUID is unavailable (insecure-context browser)", async () => {
+    // Plain-HTTP internal tools have crypto.getRandomValues but no randomUUID.
+    const realCrypto = globalThis.crypto;
+    vi.stubGlobal("crypto", {
+      getRandomValues: (a: Uint8Array) => realCrypto.getRandomValues(a),
+    });
+    fetchMock.mockResolvedValueOnce(okResponse());
+    const result = await new PositiveROI({ apiKey: "k", endpoint: ENDPOINT }).logRun({
+      tool: "demo-tool",
+    });
+    expect(result.ok).toBe(true);
+    // Still a well-formed v4-shaped key so the server dedupes replays.
+    expect(String(sentBody(fetchMock.mock.calls[0]).idempotency_key)).toMatch(
+      /^sdk:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+  });
 });
 
 describe("one-shot logRun (env-configured)", () => {

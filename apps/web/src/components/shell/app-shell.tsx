@@ -296,13 +296,17 @@ function PeriodSelector() {
     router.replace(qs ? `${pathname}?${qs}` : pathname);
   }
 
+  function openCustomPicker() {
+    // Prefill from the active range so "edit" starts where you are.
+    const match = raw ? CUSTOM_PERIOD_PARAM_RE.exec(raw) : null;
+    setFrom(match?.[1] ?? "");
+    setTo(match?.[2] ?? "");
+    setPickerOpen(true);
+  }
+
   function onChange(next: string) {
     if (next === "custom") {
-      // Prefill from the active range so "edit" starts where you are.
-      const match = raw ? CUSTOM_PERIOD_PARAM_RE.exec(raw) : null;
-      setFrom(match?.[1] ?? "");
-      setTo(match?.[2] ?? "");
-      setPickerOpen(true);
+      openCustomPicker();
       return;
     }
     navigate(next === "all" ? null : next);
@@ -337,7 +341,14 @@ function PeriodSelector() {
                   {p.label}
                 </SelectItem>
               ))}
-              <SelectItem value="custom">Custom range…</SelectItem>
+              {/* onValueChange won't fire when "custom" is already the value,
+                  so open the picker from the item's own pointer event too. */}
+              <SelectItem
+                value="custom"
+                onPointerUp={() => openCustomPicker()}
+              >
+                Custom range…
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

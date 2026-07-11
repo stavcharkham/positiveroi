@@ -53,6 +53,7 @@ interface ToolRow {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const UNIQUE_VIOLATION = "23505";
+const CHECK_VIOLATION = "23514";
 
 // ---------------------------------------------------------------------------
 // Pure rules — exported for unit tests.
@@ -160,8 +161,12 @@ export async function ingestEvents(
     ctx.workspaceId,
     Array.from(new Set(events.map((e) => e.tool))),
   );
+  // Postgres's uuid type is case-insensitive, so an uppercase UUID matches a
+  // row whose id is stored lowercase; look it up by the lowercased ref.
   const lookupTool = (ref: string): ToolRow | undefined =>
-    UUID_RE.test(ref) ? (byId.get(ref) ?? bySlug.get(ref)) : bySlug.get(ref);
+    UUID_RE.test(ref)
+      ? (byId.get(ref.toLowerCase()) ?? bySlug.get(ref))
+      : bySlug.get(ref);
 
   // Metric definitions are per-workspace and few — fetch once when needed.
   let metricIdByKey: Map<string, string> | null = null;
@@ -312,6 +317,13 @@ async function ingestOne(
         status: "duplicate",
         ...(existing ? { event_id: existing.id as string } : {}),
       };
+    }
+    // The app-side metadata pre-check measures UTF-8 text bytes; the DB check
+    // measures jsonb (pg_column_size), which adds per-entry overhead. A payload
+    // that slips past the pre-check but trips the DB check surfaces as a
+    // check_violation — report it as what it is, not a generic internal error.
+    if (error.code === CHECK_VIOLATION) {
+      return rejected("metadata_too_large", "metadata exceeds the 8KB limit.");
     }
     return rejected("internal", "Event could not be stored.");
   }

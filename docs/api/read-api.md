@@ -64,13 +64,12 @@ Bucketed series for charts.
 | `bucket` | `day` \| `week` \| `month` | Bucketed in the workspace timezone |
 | `from`, `to` | `YYYY-MM-DD` | Range |
 | `tool` | slug | Optional: restrict to one tool |
-| `metric` | metric key | Optional: include that metric's per-bucket total |
 
 ```json
 {
   "buckets": [
-    { "start": "2026-07-01", "runs": 61, "minutes_saved": 823.5, "metric_value": 9 },
-    { "start": "2026-07-02", "runs": 58, "minutes_saved": 783, "metric_value": 12 }
+    { "start": "2026-07-01", "runs": 61, "minutes_saved": 823.5 },
+    { "start": "2026-07-02", "runs": 58, "minutes_saved": 783 }
   ]
 }
 ```
@@ -120,7 +119,7 @@ The one aggregate ingest keys may also read (it powers setup verification and pr
 List tools. The shape depends on the key's scope:
 
 - **ingest** (slim): `id`, `slug`, `name`, `type`, `status`, `minutes_saved_per_run`
-- **read** (full): slim fields plus `owner`, `runs_30d`, `hours_all_time`, `last_run_at`
+- **read** (full): slim fields plus `owner_display_name`, `runs_30d`, `hours_all_time`, `last_run_at`
 
 `minutes_saved_per_run` is the credit new runs snapshot: the builder-set number when the tool's owner set one in the dashboard, otherwise the suggested Undercount.
 

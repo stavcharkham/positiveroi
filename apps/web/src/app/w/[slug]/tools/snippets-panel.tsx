@@ -39,7 +39,7 @@ function SnippetsPanel({ type, toolSlug, endpoint, workspaceSlug }: SnippetsPane
           </code>{" "}
           with an ingest key from{" "}
           <Link
-            href={`/w/${workspaceSlug}/settings`}
+            href={`/w/${workspaceSlug}/settings/keys`}
             className="font-medium text-accent hover:underline"
           >
             Settings → Keys

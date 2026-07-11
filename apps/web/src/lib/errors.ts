@@ -146,6 +146,9 @@ export function corsHeaders(methods: string): Record<string, string> {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
     "Access-Control-Allow-Methods": methods,
+    // Retry-After is not CORS-safelisted, so browser SDK callers cannot read
+    // it off a 429 without this — and the docs tell them to honor it.
+    "Access-Control-Expose-Headers": "Retry-After",
   };
 }
 

@@ -252,16 +252,21 @@ function CreateKeyDialog({
     setPending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const result = await createApiKeyAction(slug, {
-      name: String(form.get("name") ?? ""),
-      scope,
-    });
-    if (result.ok && result.secret) {
-      setSecret(result.secret);
-    } else {
-      setError(result.error ?? "Could not create the key. Try again.");
+    try {
+      const result = await createApiKeyAction(slug, {
+        name: String(form.get("name") ?? ""),
+        scope,
+      });
+      if (result.ok && result.secret) {
+        setSecret(result.secret);
+      } else {
+        setError(result.error ?? "Could not create the key. Try again.");
+      }
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   return (
@@ -370,15 +375,20 @@ function RevokeKeyDialog({
   async function revoke() {
     if (!target) return;
     setPending(true);
-    const result = await revokeApiKeyAction(slug, target.id);
-    if (result.ok) {
-      toast.success("Key revoked. It stops working immediately.");
-      router.refresh();
-      onClose();
-    } else {
-      toast.error(result.error ?? "Could not revoke the key.");
+    try {
+      const result = await revokeApiKeyAction(slug, target.id);
+      if (result.ok) {
+        toast.success("Key revoked. It stops working immediately.");
+        router.refresh();
+        onClose();
+      } else {
+        toast.error(result.error ?? "Could not revoke the key.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   return (

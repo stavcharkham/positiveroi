@@ -59,22 +59,27 @@ function PublicConfigForm({
   async function save() {
     setPending(true);
     setError(null);
-    const result = await updatePublicConfigAction(slug, {
-      enabled,
-      publicSlug,
-      showTools,
-      showBuilders,
-      showMoney,
-    });
-    if (result.ok) {
-      toast.success(
-        enabled ? "Saved. Your impact page is live." : "Saved. The page stays private.",
-      );
-      router.refresh();
-    } else {
-      setError(result.error ?? "Could not save. Try again.");
+    try {
+      const result = await updatePublicConfigAction(slug, {
+        enabled,
+        publicSlug,
+        showTools,
+        showBuilders,
+        showMoney,
+      });
+      if (result.ok) {
+        toast.success(
+          enabled ? "Saved. Your impact page is live." : "Saved. The page stays private.",
+        );
+        router.refresh();
+      } else {
+        setError(result.error ?? "Could not save. Try again.");
+      }
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(false);
     }
-    setPending(false);
   }
 
   return (

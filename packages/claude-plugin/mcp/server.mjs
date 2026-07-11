@@ -21358,7 +21358,9 @@ ${lines.join("\n")}`);
 var logRunDescription = "Log one run of a registered tool AFTER its work completes. Each run credits the tool's conservative minutes-saved-per-run toward the builder's measured impact. Call it once per completed run \u2014 idempotency keys make accidental repeats safe. Do NOT call it for tools captured automatically by the PositiveROI plugin hook.";
 var logRunInput = {
   tool: external_exports.string().min(1).max(100).describe("The registered tool's slug (see list_tools)."),
-  minutes_saved: external_exports.number().min(0).optional().describe("Only to LOWER credit for a partial run \u2014 the server clamps it to the tool's per-run credit."),
+  minutes_saved: external_exports.number().min(0).optional().describe(
+    "Per-run override for a run that did more or less than usual. The server clamps it to [0, the tool's raw baseline minutes]; leave it unset to credit the tool's normal per-run amount."
+  ),
   metrics: external_exports.record(external_exports.number()).optional().describe('Business metrics for this run, metric key \u2192 number, e.g. {"leads_generated": 3}.'),
   metadata: external_exports.record(external_exports.unknown()).optional().describe("Free-form context for this run."),
   idempotency_key: external_exports.string().min(1).max(128).optional().describe("Provide to dedupe retries of the same run."),
@@ -21499,7 +21501,7 @@ async function main() {
       [
         "positiveroi-mcp \u2014 PositiveROI MCP server (stdio)",
         "",
-        "Runs as an MCP stdio server exposing: register_tool, log_run, list_tools, get_summary.",
+        "Runs as an MCP stdio server exposing: register_tool, log_run, list_tools, list_metrics, get_summary.",
         `Config: ${configPath()} (env POSITIVEROI_API_KEY / POSITIVEROI_ENDPOINT override it).`,
         "",
         config2 ? `Configured \u2014 endpoint: ${config2.endpoint}` : SETUP_HINT,

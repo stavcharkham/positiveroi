@@ -114,22 +114,27 @@ function ToolWizard({
     setCreating(true);
     setError(null);
     const override = normalizeCreditOverride(suggested, creditMinutes);
-    const result = await createToolAction(workspaceSlug, {
-      name: name.trim(),
-      description: description.trim(),
-      type,
-      raw_estimate_minutes: rawMinutes,
-      high_judgment: highJudgment,
-      owner_id: ownerId,
-      ...(override !== null ? { minutes_saved_override: override } : {}),
-    });
-    if (result.ok && result.toolId && result.toolSlug) {
-      setTool({ id: result.toolId, slug: result.toolSlug });
-      setStep(3);
-    } else {
-      setError(result.error ?? "Something went wrong. Try again.");
+    try {
+      const result = await createToolAction(workspaceSlug, {
+        name: name.trim(),
+        description: description.trim(),
+        type,
+        raw_estimate_minutes: rawMinutes,
+        high_judgment: highJudgment,
+        owner_id: ownerId,
+        ...(override !== null ? { minutes_saved_override: override } : {}),
+      });
+      if (result.ok && result.toolId && result.toolSlug) {
+        setTool({ id: result.toolId, slug: result.toolSlug });
+        setStep(3);
+      } else {
+        setError(result.error ?? "Something went wrong. Try again.");
+      }
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setCreating(false);
     }
-    setCreating(false);
   }
 
   return (

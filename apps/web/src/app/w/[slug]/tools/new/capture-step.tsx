@@ -67,28 +67,38 @@ function CaptureStep({
 
   async function sendTest() {
     setPending("test");
-    const result = await sendTestRunAction(workspaceSlug, tool.id);
-    if (result.ok) {
-      setTestSent(true);
-      toast.success("Test run landed. It is never counted in totals.");
-    } else {
-      toast.error(result.error ?? "The test run failed. Try again.");
+    try {
+      const result = await sendTestRunAction(workspaceSlug, tool.id);
+      if (result.ok) {
+        setTestSent(true);
+        toast.success("Test run landed. It is never counted in totals.");
+      } else {
+        toast.error(result.error ?? "The test run failed. Try again.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(null);
     }
-    setPending(null);
   }
 
   async function logManual() {
     setPending("manual");
-    const result = await logManualRunAction(workspaceSlug, tool.id);
-    if (result.ok) {
-      toast.success("Run logged. It counts.");
-      // Surface it immediately instead of waiting for the next poll tick.
-      const first = await getFirstRunAction(workspaceSlug, tool.id);
-      if (first.event) setFirstRun(first.event);
-    } else {
-      toast.error(result.error ?? "Could not log the run. Try again.");
+    try {
+      const result = await logManualRunAction(workspaceSlug, tool.id);
+      if (result.ok) {
+        toast.success("Run logged. It counts.");
+        // Surface it immediately instead of waiting for the next poll tick.
+        const first = await getFirstRunAction(workspaceSlug, tool.id);
+        if (first.event) setFirstRun(first.event);
+      } else {
+        toast.error(result.error ?? "Could not log the run. Try again.");
+      }
+    } catch {
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPending(null);
     }
-    setPending(null);
   }
 
   const toolPath = `/w/${workspaceSlug}/tools/${tool.id}`;

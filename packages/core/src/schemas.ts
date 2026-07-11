@@ -108,9 +108,23 @@ export const creditOverrideSchema = z
     message: "credited minutes support at most 2 decimal places",
   });
 
+/**
+ * At most 2 decimal places — the scale of the numeric(8,2) baseline column and
+ * the precision computeMinutesSavedPerRun accepts. Both create paths enforce
+ * this so an over-precise baseline fails validation before any write, rather
+ * than inserting a row that then throws when its receipt is computed.
+ */
+const atMost2dp = (v: number) =>
+  Math.abs(v * 100 - Math.round(v * 100)) < 1e-6;
+const TWO_DP_MESSAGE = "baseline supports at most 2 decimal places";
+
 /** Dashboard path: cap 480 raw minutes; optional builder-set credit. */
 export const toolCreateSchema = toolCreateBase.extend({
-  raw_estimate_minutes: z.number().gt(0).max(RAW_ESTIMATE_MAX_DASHBOARD),
+  raw_estimate_minutes: z
+    .number()
+    .gt(0)
+    .max(RAW_ESTIMATE_MAX_DASHBOARD)
+    .refine(atMost2dp, { message: TWO_DP_MESSAGE }),
   minutes_saved_override: creditOverrideSchema.optional(),
 });
 
@@ -122,7 +136,8 @@ export const toolCreateApiSchema = toolCreateBase.extend({
     .max(
       RAW_ESTIMATE_MAX_API,
       `API-registered tools are capped at ${RAW_ESTIMATE_MAX_API} raw minutes; larger baselines must be set in the dashboard`,
-    ),
+    )
+    .refine(atMost2dp, { message: TWO_DP_MESSAGE }),
 });
 
 export type ToolCreate = z.infer<typeof toolCreateSchema>;

@@ -85,6 +85,15 @@ describe("resolvePeriod — custom from/to in workspace timezone", () => {
     ).toThrow(PeriodError);
     expect(() => zonedDayStartUtc("2026-07-01", "Not/AZone")).toThrow(PeriodError);
   });
+
+  it("rejects calendar-invalid dates instead of rolling them over", () => {
+    // Date.UTC(2026, 1, 31) silently becomes Mar 3 — must be caught.
+    expect(() => zonedDayStartUtc("2026-02-31", "UTC")).toThrow(PeriodError);
+    expect(() => zonedDayStartUtc("2026-13-99", "UTC")).toThrow(PeriodError);
+    expect(() =>
+      resolvePeriod({ from: "2026-02-31", to: "2026-03-05" }, "UTC", CREATED, NOW),
+    ).toThrow(PeriodError);
+  });
 });
 
 describe("resolvePeriod — packed custom period (dashboard ?period=from..to)", () => {

@@ -63,7 +63,7 @@ function Receipt({
   const lines: { label: string; value: string; cut?: boolean }[] = [
     { label: "Before this tool", value: valid ? `${fmt(rawMinutes)} min` : "—" },
     {
-      label: `Trust cut −${confidencePct}%`,
+      label: `Conservatism cut −${confidencePct}%`,
       value: afterConfidence !== null ? `${fmt(afterConfidence)} min` : "—",
       cut: true,
     },

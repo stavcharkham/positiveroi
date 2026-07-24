@@ -48,7 +48,7 @@ function CutExplainer({
         <div className="space-y-3 text-sm leading-relaxed text-foreground-secondary">
           <p>
             <span className="font-medium text-foreground">
-              The trust cut, −{cutPct}%.
+              The conservatism cut, −{cutPct}%.
             </span>{" "}
             Only {Math.round(CONSERVATISM_FACTOR * 100)}% of your estimate
             counts. This absorbs optimism, runs that partially fail, and the

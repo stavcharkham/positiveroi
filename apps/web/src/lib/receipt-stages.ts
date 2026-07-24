@@ -12,7 +12,7 @@ export interface ReceiptStage {
 
 /**
  * The stages the receipt flow animates through: the builder's claim, the
- * trust cut, and (when a human stays in the loop) the judgment cut. The
+ * conservatism cut, and (when a human stays in the loop) the judgment cut. The
  * minutes come from the same frozen core function every credited number
  * uses — this module only shapes them for display.
  */

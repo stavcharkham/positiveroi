@@ -4,6 +4,14 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Product decisions (Stav)
 
+**2026-07-24, third round (Track H follow-ups)**
+
+- **The 40% cut is named the "conservatism cut"** on every screen (was "trust cut", before that "confidence cut" internally).
+- **MCP is for the coding assistant, not the built agent.** A tracked agent logs runs with a deterministic POST wired into its code at job completion (never a model-invoked tool). The MCP server remains the way Claude Code/Cursor register tools and log/summarize while building. Agent-type capture instructions are REST, same as automations.
+- **Idempotency is not prescribed to agents.** The API keeps accepting `idempotency_key` (optional, dedup contract unchanged) but prompts no longer teach it; clients invent their own conventions, our SDK/plugin/hook keep generating theirs.
+- **Agent prompts must have the coding assistant verify `POSITIVEROI_API_KEY` is set** and ask the human to add it when missing; the key value never enters an AI chat.
+- **Sandbox/Cowork skill tracking known limitation** (answered for Stav): the plugin hook works where it is installed, configured, and allowed outbound network. Fresh sandboxes lose config and queued events and may block egress, so hook capture there is not guaranteed; the reliable sandbox path is the POST inside the tool. Possible later fixes: env-var-only plugin config + domain allowlisting. The plugin ships in the open-source repo and works self-hosted (endpoint configurable).
+
 **2026-07-24** (first hands-on test, dev env → Track G)
 
 - **Hourly rate is optional and lives in settings**, framed as "convert hours to money". Out of every setup path. Dashboards lead with hours; money shows only when a rate is set, labeled as an estimate. No per-builder rates (salary proxy).

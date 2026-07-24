@@ -77,7 +77,7 @@ function UndercountedTag({ className }: { className?: string }) {
           Runs are measured. Minutes are estimates that survived two cuts.
         </p>
         <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-foreground-secondary">
-          Every claim takes a 40% trust cut, then is halved again when a
+          Every claim takes a 40% conservatism cut, then is halved again when a
           person still checks each run.
         </p>
         <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-foreground-secondary">

@@ -73,9 +73,8 @@ export function agentPrompt(type: ToolType, ctx: SnippetContext): string {
   const shared = `PositiveROI counts the time this tool saves. Every successful run must report itself with one small POST: only "a run happened", never the run's content.
 
 Rules:
-- POST ${endpoint}/api/ingest with header "Authorization: Bearer <ingest key>" and JSON body {"tool": "${toolSlug}", "idempotency_key": "<stable unique id for this run>"}.
-- Read the ingest key from the ${ENV_API_KEY} environment variable. The human sets it; it is deliberately not in this prompt. Never ask for it, never hardcode it.
-- The idempotency_key stops double counting on retries: derive it once per run (an event id, a job id, or a timestamp captured once) and reuse it if the same run reports again.
+- First check that the ${ENV_API_KEY} environment variable is set where this tool runs (a .env file, the platform's secrets). If it is missing, stop and ask the human to add it. Never ask for the key's value in this chat, never hardcode it.
+- POST ${endpoint}/api/ingest with header "Authorization: Bearer <the key from ${ENV_API_KEY}>" and JSON body {"tool": "${toolSlug}"}.
 - Log only successful runs. Never send prompts, inputs, outputs, or any other content.
 - Full API reference: ${DOCS_LINK}`;
 
@@ -111,19 +110,14 @@ Do this:
 
 Plugin guide: https://github.com/stavcharkham/positiveroi/blob/main/docs/quickstart/skill-plugin.md`;
     case "agent":
-      return `Connect this agent to PositiveROI over MCP.
+      return `Add PositiveROI run logging to this agent.
 
 ${shared}
 
-Prefer MCP over raw HTTP: the PositiveROI MCP server gives the agent log_run, register_tool, list_tools, get_summary and list_metrics tools.
-
 Do this:
-1. Have the human set these in the agent's environment (the key stays out of this conversation):
-   ${ENV_API_KEY}=<the ingest key>
-   POSITIVEROI_ENDPOINT=${endpoint}
-2. Add the PositiveROI MCP server to the agent's MCP config (see the repo's packages/mcp-server README).
-3. Have the agent call log_run with tool "${toolSlug}" after each completed job; the idempotency key is handled for you.
-4. Trigger one job to verify: the run appears on the tool's PositiveROI page marked "via mcp".`;
+1. Find where the agent finishes a job: the deterministic end of a run in code, not a step the model decides to take.
+2. Add the POST there, after success. Logging must not be a model-invoked tool; it fires on every completed job, every time.
+3. Trigger one job to verify: the run appears on the tool's PositiveROI page within seconds.`;
   }
 }
 
@@ -148,9 +142,12 @@ export function snippetsForType(
         { label: "Claude Code plugin", language: "bash", code: pluginSnippet(ctx) },
       ];
     case "agent":
+      // The running agent logs with a deterministic call, same as an
+      // automation. The MCP server is for the coding assistant that BUILDS
+      // tools (register, log, summarize), not for the built agent.
       return [
-        { label: "MCP server", language: "bash", code: mcpEnvSnippet(ctx) },
-        { label: "REST fallback", language: "bash", code: curlSnippet(ctx) },
+        { label: "Webhook (curl)", language: "bash", code: curlSnippet(ctx) },
+        { label: "JavaScript (fetch)", language: "typescript", code: fetchSnippet(ctx) },
       ];
   }
 }

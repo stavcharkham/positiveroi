@@ -31,7 +31,7 @@ export interface ReceiptFlowProps {
 
 const STAGE_LABELS: Record<ReceiptStage["key"], string> = {
   claim: "You said",
-  trust: "Trust cut −40%",
+  trust: "Conservatism cut −40%",
   judgment: "A person still checks ÷2",
 };
 
@@ -43,7 +43,7 @@ const STAGE_BAR: Record<ReceiptStage["key"], string> = {
 
 /**
  * The receipt as a flow: quiet until there is a claim, then the cuts play
- * out bar by bar — claim, trust cut, judgment cut — ending on the credited
+ * out bar by bar — claim, conservatism cut, judgment cut — ending on the credited
  * number. The trust framing leads; the math is the same frozen core
  * function behind every credited number in the product.
  */

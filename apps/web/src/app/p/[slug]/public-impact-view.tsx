@@ -100,7 +100,7 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
             <UndercountedTag className="mt-0.5" />
             <p className="max-w-lg text-sm leading-relaxed text-foreground-secondary">
               Every run is measured. The minutes are deliberately conservative:
-              each claimed baseline takes a 40% trust cut, then the number is
+              each claimed baseline takes a 40% conservatism cut, then the number is
               halved again when a human decision stays in the loop.
             </p>
           </div>

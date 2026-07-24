@@ -21,7 +21,7 @@ import { SiteHeader } from "../_marketing/site-header";
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "The Undercount: how PositiveROI counts time saved. Every claim takes a 40% trust cut, then a judgment cut when a person still checks, and every number drills down to its runs.",
+    "The Undercount: how PositiveROI counts time saved. Every claim takes a 40% conservatism cut, then a judgment cut when a person still checks, and every number drills down to its runs.",
 };
 
 const CONFIDENCE_CUT_PCT = Math.round((1 - CONSERVATISM_FACTOR) * 100);
@@ -83,7 +83,7 @@ export default function MethodologyPage() {
               </p>
               <p className="mt-1.5">
                 <strong className="font-semibold text-foreground">
-                  The trust cut.
+                  The conservatism cut.
                 </strong>{" "}
                 Only {CREDITED_PCT}% of the baseline counts. This absorbs
                 estimation optimism, the runs that partially fail, and the

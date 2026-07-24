@@ -141,7 +141,7 @@ function Hero({ hosted }: { hosted: boolean }) {
 const UNDERCOUNT_POINTS = [
   {
     n: "01",
-    title: "The trust cut removes 40%",
+    title: "The conservatism cut removes 40%",
     body: "It absorbs estimation optimism, the runs that partially fail, and the overhead every estimate forgets.",
   },
   {

@@ -26,12 +26,19 @@ describe("agentPrompt", () => {
     }
   });
 
-  it("REST-based prompts state the idempotency and no-content rules", () => {
+  it("REST-based prompts check the env var first and state the no-content rule", () => {
     for (const type of ["automation", "app", "agent"] as const) {
       const prompt = agentPrompt(type, ctx);
-      expect(prompt).toContain("idempotency_key");
-      expect(prompt.toLowerCase()).toContain("never");
+      expect(prompt).toContain("/api/ingest");
+      expect(prompt).toMatch(/check that the POSITIVEROI_API_KEY/);
+      expect(prompt.toLowerCase()).toContain("never send prompts");
     }
+  });
+
+  it("the agent prompt wires a deterministic call, not MCP", () => {
+    const prompt = agentPrompt("agent", ctx);
+    expect(prompt).not.toContain("MCP");
+    expect(prompt).toContain("not a step the model decides");
   });
 
   it("skill prompt goes through the plugin, not raw HTTP", () => {

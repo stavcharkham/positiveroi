@@ -603,7 +603,7 @@ function CutsStep({
           </h3>
           <p className="mt-1 text-sm text-foreground-secondary">
             We suggest {fmtNum(suggested)} min, the number on your receipt. If
-            you know the real number, set it yourself.
+            you prefer to change the final time saved/run, set it yourself.
           </p>
           <CreditField
             suggested={suggested}

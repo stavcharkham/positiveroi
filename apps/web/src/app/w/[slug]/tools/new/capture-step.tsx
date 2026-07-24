@@ -9,6 +9,7 @@ import type { ToolType } from "@positiveroi/core";
 import { Button } from "@/components/ui/button";
 import { Receipt } from "@/components/product/receipt";
 import { SourceBadge } from "@/components/product/source-badge";
+import { onboardingKeySlot } from "@/lib/profile";
 import { SnippetsPanel } from "../snippets-panel";
 import { fmtNum } from "../tool-meta";
 import {
@@ -27,6 +28,10 @@ export interface CaptureStepProps {
   highJudgment: boolean;
   /** Builder-set credit when it differs from the suggestion. */
   overrideMinutes?: number;
+  /** Fresh ingest key from onboarding — shown inline, embedded in snippets. */
+  ingestKey?: string | null;
+  /** Onboarding first-tool flow: confetti + tour when the first run lands. */
+  onboarding?: boolean;
 }
 
 /**
@@ -42,6 +47,8 @@ function CaptureStep({
   rawMinutes,
   highJudgment,
   overrideMinutes,
+  ingestKey = null,
+  onboarding = false,
 }: CaptureStepProps) {
   const [firstRun, setFirstRun] = React.useState<FirstRunPayload | null>(null);
   const [testSent, setTestSent] = React.useState(false);
@@ -118,6 +125,7 @@ function CaptureStep({
             toolSlug={tool.slug}
             endpoint={endpoint}
             workspaceSlug={workspaceSlug}
+            ingestKey={ingestKey ?? undefined}
           />
         </div>
       </section>
@@ -130,6 +138,8 @@ function CaptureStep({
             highJudgment={highJudgment}
             overrideMinutes={overrideMinutes}
             toolPath={toolPath}
+            workspaceSlug={workspaceSlug}
+            onboarding={onboarding}
           />
         ) : (
           <>
@@ -203,13 +213,48 @@ function FirstRunLanded({
   highJudgment,
   overrideMinutes,
   toolPath,
+  workspaceSlug,
+  onboarding,
 }: {
   firstRun: FirstRunPayload;
   rawMinutes: number;
   highJudgment: boolean;
   overrideMinutes?: number;
   toolPath: string;
+  workspaceSlug: string;
+  onboarding: boolean;
 }) {
+  // The whimsy moment: confetti when the very first run lands during
+  // onboarding. Skipped for reduced-motion users; the key slot is cleared
+  // either way — the tool is wired, the key has done its job.
+  React.useEffect(() => {
+    if (!onboarding) return;
+    try {
+      sessionStorage.removeItem(onboardingKeySlot(workspaceSlug));
+    } catch {
+      // Storage unavailable — nothing to clear.
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let cancelled = false;
+    import("canvas-confetti").then(({ default: confetti }) => {
+      if (cancelled) return;
+      const fire = (particleRatio: number, opts: object) =>
+        confetti({
+          particleCount: Math.floor(160 * particleRatio),
+          spread: 70,
+          origin: { y: 0.6 },
+          ...opts,
+        });
+      fire(0.4, {});
+      fire(0.3, { spread: 100, decay: 0.91, scalar: 0.9 });
+      fire(0.3, { spread: 120, startVelocity: 45, angle: 60, origin: { x: 0 } });
+      fire(0.3, { spread: 120, startVelocity: 45, angle: 120, origin: { x: 1 } });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onboarding, workspaceSlug]);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.85 }}
@@ -240,12 +285,66 @@ function FirstRunLanded({
         />
       </div>
 
-      <Button asChild className="mt-5">
-        <Link href={toolPath}>
-          Go to the tool page <ArrowRight aria-hidden />
-        </Link>
-      </Button>
+      {onboarding ? (
+        <div className="mt-5 border-t border-border pt-5">
+          <p className="text-sm font-semibold text-foreground">
+            Your tool is on the board. Here&apos;s what&apos;s next:
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <TourCard
+              href={`/w/${workspaceSlug}/settings/members`}
+              title="Invite your team"
+              body="Every builder's tools land on one dashboard."
+            />
+            <TourCard
+              href={`/w/${workspaceSlug}/metrics`}
+              title="Add business metrics"
+              body="Track leads, revenue, touchpoints — not just time."
+            />
+            <TourCard
+              href={`/w/${workspaceSlug}/settings/public`}
+              title="Go public"
+              body="An opt-in public page and badge for your impact."
+            />
+          </div>
+          <Button asChild className="mt-4">
+            <Link href={`/w/${workspaceSlug}`}>
+              Go to your dashboard <ArrowRight aria-hidden />
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <Button asChild className="mt-5">
+          <Link href={toolPath}>
+            Go to the tool page <ArrowRight aria-hidden />
+          </Link>
+        </Button>
+      )}
     </motion.div>
+  );
+}
+
+function TourCard({
+  href,
+  title,
+  body,
+}: {
+  href: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-md border border-border bg-surface p-3 transition-colors hover:border-accent/40 hover:bg-subtle/60"
+    >
+      <span className="block text-[0.8125rem] font-medium text-foreground">
+        {title}
+      </span>
+      <span className="mt-0.5 block text-xs leading-snug text-foreground-secondary">
+        {body}
+      </span>
+    </Link>
   );
 }
 

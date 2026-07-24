@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { UserPlus } from "lucide-react";
 import { acceptInviteAction, lookupInvite } from "@/lib/actions/invites";
+import { BUILDER_TYPES } from "@/lib/profile";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,7 +46,35 @@ export default async function InvitePage({
               </Button>
             ) : (
               <form action={acceptInviteAction.bind(null, token)}>
-                <Button type="submit" className="mt-5 w-full">
+                <fieldset className="mt-5 text-left">
+                  <legend className="text-[0.8125rem] font-medium text-foreground">
+                    How do you build? (optional)
+                  </legend>
+                  <div className="mt-2 grid gap-2">
+                    {BUILDER_TYPES.map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex cursor-pointer items-start gap-2.5 rounded-md border border-border bg-surface p-3 transition-colors hover:border-accent/40 has-[:checked]:border-accent has-[:checked]:bg-accent-soft/50"
+                      >
+                        <input
+                          type="radio"
+                          name="builder_type"
+                          value={option.value}
+                          className="mt-0.5 accent-[var(--color-accent)]"
+                        />
+                        <span>
+                          <span className="block text-sm font-medium text-foreground">
+                            {option.label}
+                          </span>
+                          <span className="mt-0.5 block text-xs leading-snug text-foreground-secondary">
+                            {option.blurb}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <Button type="submit" className="mt-4 w-full">
                   Accept invitation
                 </Button>
               </form>

@@ -1,28 +1,42 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowRight, Check, Copy, KeyRound, Link2 } from "lucide-react";
-import { createInviteAction } from "@/lib/actions/invites";
-import { createWorkspaceAction } from "@/lib/actions/workspaces";
+import { Check } from "lucide-react";
+import {
+  createWorkspaceAction,
+  saveWorkspaceProfileAction,
+} from "@/lib/actions/workspaces";
+import { BUILDER_TYPES, COMPANY_SIZES, onboardingKeySlot } from "@/lib/profile";
 import { Button } from "@/components/ui/button";
-import { CodeBlock } from "@/components/ui/code-block";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-type Step = "create" | "key" | "invite" | "done";
-const STEPS: Step[] = ["create", "key", "invite", "done"];
+type Step = "create" | "profile";
+const STEPS: Step[] = ["create", "profile"];
 
 /**
- * One-screen-per-decision onboarding: workspace → ingest key (shown once) →
- * skippable invite link → first-tool prompt. Timezone is captured silently.
+ * Two light screens, then straight into connecting the first tool: create
+ * the workspace (name + your name), answer three profile questions, and
+ * the tool wizard takes over with the fresh ingest key carried along in
+ * sessionStorage — never in a URL. Invites come after the first run lands.
  */
 function OnboardingFlow() {
+  const router = useRouter();
   const [step, setStep] = React.useState<Step>("create");
   const [slug, setSlug] = React.useState("");
   const [ingestKey, setIngestKey] = React.useState("");
+
+  function enterWorkspace() {
+    try {
+      sessionStorage.setItem(onboardingKeySlot(slug), ingestKey);
+    } catch {
+      // Storage unavailable — the wizard falls back to the placeholder key.
+    }
+    router.push(`/w/${slug}/tools/new?onboarding=1`);
+  }
 
   return (
     <div className="w-full max-w-lg">
@@ -49,17 +63,13 @@ function OnboardingFlow() {
             onCreated={(s, key) => {
               setSlug(s);
               setIngestKey(key);
-              setStep("key");
+              setStep("profile");
             }}
           />
         )}
-        {step === "key" && (
-          <KeyStep ingestKey={ingestKey} onNext={() => setStep("invite")} />
+        {step === "profile" && (
+          <ProfileStep slug={slug} onDone={enterWorkspace} />
         )}
-        {step === "invite" && (
-          <InviteStep slug={slug} onNext={() => setStep("done")} />
-        )}
-        {step === "done" && <DoneStep slug={slug} />}
       </motion.div>
     </div>
   );
@@ -78,15 +88,20 @@ function CreateStep({
     setPending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const result = await createWorkspaceAction({
-      name: String(form.get("name") ?? ""),
-      displayName: String(form.get("displayName") ?? ""),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    });
-    if (result.ok && result.slug && result.ingestKey) {
-      onCreated(result.slug, result.ingestKey);
-    } else {
+    try {
+      const result = await createWorkspaceAction({
+        name: String(form.get("name") ?? ""),
+        displayName: String(form.get("displayName") ?? ""),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+      if (result.ok && result.slug && result.ingestKey) {
+        onCreated(result.slug, result.ingestKey);
+        return;
+      }
       setError(result.error ?? "Something went wrong. Try again.");
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
       setPending(false);
     }
   }
@@ -99,7 +114,7 @@ function CreateStep({
       </p>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="name">Workspace name</Label>
+          <Label htmlFor="name">Company name</Label>
           <Input id="name" name="name" required maxLength={80} placeholder="Acme" autoFocus />
         </div>
         <div className="space-y-1.5">
@@ -122,106 +137,110 @@ function CreateStep({
   );
 }
 
-function KeyStep({ ingestKey, onNext }: { ingestKey: string; onNext: () => void }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-6 shadow-sm">
-      <div className="flex size-10 items-center justify-center rounded-lg bg-accent-soft">
-        <KeyRound className="size-5 text-accent" aria-hidden />
-      </div>
-      <h1 className="numeral mt-4 text-2xl text-foreground">Your ingest key</h1>
-      <p className="mt-1.5 text-sm leading-relaxed text-foreground-secondary">
-        Tools use this key to report their runs. This is the only time
-        it&apos;s shown — copy it somewhere safe. You can create more keys in
-        Settings.
-      </p>
-      <CodeBlock code={ingestKey} caption="Default ingest key" className="mt-4" />
-      <Button onClick={onNext} className="mt-5 w-full">
-        I saved it <ArrowRight aria-hidden />
-      </Button>
-    </div>
-  );
-}
-
-function InviteStep({ slug, onNext }: { slug: string; onNext: () => void }) {
-  const [url, setUrl] = React.useState<string | null>(null);
+function ProfileStep({ slug, onDone }: { slug: string; onDone: () => void }) {
+  const [website, setWebsite] = React.useState("");
+  const [size, setSize] = React.useState<string | null>(null);
+  const [builderType, setBuilderType] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
 
-  async function createLink() {
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
     setPending(true);
-    setError(null);
-    const result = await createInviteAction(slug);
-    if (result.ok && result.url) setUrl(result.url);
-    else setError(result.error ?? "Could not create the link.");
-    setPending(false);
-  }
-
-  async function copy() {
-    if (!url) return;
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      await saveWorkspaceProfileAction(slug, {
+        ...(website.trim() ? { website } : {}),
+        ...(size ? { companySize: size } : {}),
+        ...(builderType ? { builderType } : {}),
+      });
     } catch {
-      // Clipboard unavailable — the link is visible to copy by hand.
+      // Profile answers are a signal, not a gate — never block the flow.
     }
+    onDone();
   }
 
   return (
     <div className="rounded-lg border border-border bg-surface p-6 shadow-sm">
-      <div className="flex size-10 items-center justify-center rounded-lg bg-accent-soft">
-        <Link2 className="size-5 text-accent" aria-hidden />
-      </div>
-      <h1 className="numeral mt-4 text-2xl text-foreground">Invite your builders</h1>
-      <p className="mt-1.5 text-sm leading-relaxed text-foreground-secondary">
-        Anyone with this link joins as a builder. It works 25 times and
-        expires in 14 days.
+      <h1 className="numeral text-2xl text-foreground">A little about you</h1>
+      <p className="mt-1.5 text-sm text-foreground-secondary">
+        Thirty seconds, all optional. Then we connect your first tool.
       </p>
-
-      {url ? (
-        <div className="mt-4 flex items-center gap-2">
-          <Input readOnly value={url} className="font-mono text-xs" />
-          <Button variant="secondary" size="md" onClick={copy} className="shrink-0">
-            {copied ? <Check className="text-success" aria-hidden /> : <Copy aria-hidden />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
+      <form onSubmit={submit} className="mt-6 space-y-5">
+        <div className="space-y-1.5">
+          <Label htmlFor="website">Company website</Label>
+          <Input
+            id="website"
+            name="website"
+            placeholder="acme.com"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            inputMode="url"
+          />
+          <p className="text-xs text-foreground-muted">
+            We pull your logo from it, so the workspace feels like yours.
+          </p>
         </div>
-      ) : (
-        <Button
-          variant="secondary"
-          onClick={createLink}
-          disabled={pending}
-          className="mt-4 w-full"
-        >
-          {pending ? "Creating…" : "Create invite link"}
+
+        <div className="space-y-1.5">
+          <Label>Company size</Label>
+          <div className="flex flex-wrap gap-1.5">
+            {COMPANY_SIZES.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() =>
+                  setSize(size === option.value ? null : option.value)
+                }
+                aria-pressed={size === option.value}
+                className={cn(
+                  "cursor-pointer rounded-full border px-3.5 py-1.5 text-[0.8125rem] transition-colors",
+                  size === option.value
+                    ? "border-accent bg-accent-soft text-accent"
+                    : "border-border bg-surface text-foreground-secondary hover:border-accent/50 hover:text-foreground",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>How do you build?</Label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {BUILDER_TYPES.map((option) => {
+              const selected = builderType === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    setBuilderType(selected ? null : option.value)
+                  }
+                  aria-pressed={selected}
+                  className={cn(
+                    "cursor-pointer rounded-md border p-3 text-left transition-colors",
+                    selected
+                      ? "border-accent bg-accent-soft/50"
+                      : "border-border bg-surface hover:border-accent/40 hover:bg-subtle/60",
+                  )}
+                >
+                  <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                    {option.label}
+                    {selected && <Check className="size-3.5 text-accent" aria-hidden />}
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-snug text-foreground-secondary">
+                    {option.blurb}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button type="submit" className="w-full" disabled={pending}>
+          {pending ? "Saving…" : "Connect your first tool"}
         </Button>
-      )}
-      {error && <p className="mt-2 text-[0.8125rem] text-destructive">{error}</p>}
-
-      <Button onClick={onNext} className="mt-5 w-full">
-        {url ? "Continue" : "Skip for now"} <ArrowRight aria-hidden />
-      </Button>
-    </div>
-  );
-}
-
-function DoneStep({ slug }: { slug: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-6 text-center shadow-sm">
-      <h1 className="numeral text-2xl text-foreground">Register your first tool</h1>
-      <p className="mx-auto mt-1.5 max-w-sm text-sm leading-relaxed text-foreground-secondary">
-        Name it, set an honest baseline, and watch the first run land. Takes
-        about two minutes.
-      </p>
-      <Button asChild className="mt-5 w-full">
-        <Link href={`/w/${slug}/tools/new`}>
-          Register a tool <ArrowRight aria-hidden />
-        </Link>
-      </Button>
-      <Button asChild variant="ghost" className="mt-2 w-full">
-        <Link href={`/w/${slug}`}>Go to the dashboard</Link>
-      </Button>
+      </form>
     </div>
   );
 }

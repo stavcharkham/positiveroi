@@ -67,10 +67,20 @@ export async function lookupInvite(token: string): Promise<InviteLookup | null> 
   };
 }
 
-export async function acceptInviteAction(token: string): Promise<void> {
+export async function acceptInviteAction(
+  token: string,
+  formData?: FormData,
+): Promise<void> {
   const user = await requireUser();
   const invite = await fetchValidInvite(token);
   if (!invite) redirect("/invite/invalid");
+
+  // The one onboarding question invited members get. Optional.
+  const rawBuilderType = formData?.get("builder_type");
+  const builderType =
+    rawBuilderType === "non_technical" || rawBuilderType === "technical"
+      ? rawBuilderType
+      : null;
 
   const admin = getAdminClient();
   const slug = invite.workspaces.slug;
@@ -89,6 +99,7 @@ export async function acceptInviteAction(token: string): Promise<void> {
     user_id: user.id,
     role: invite.role,
     display_name: defaultDisplayName(user.email, user.user_metadata),
+    builder_type: builderType,
   });
   if (insertError) redirect("/invite/invalid");
 

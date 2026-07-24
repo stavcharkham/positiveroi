@@ -25,6 +25,9 @@ export interface WorkspaceRow {
   hourly_rate_cents: number | null;
   currency: string;
   public_enabled: boolean;
+  website: string | null;
+  company_size: string | null;
+  logo_url: string | null;
   public_slug: string | null;
   public_config: {
     show_tools: boolean;
@@ -39,6 +42,8 @@ export interface MemberRow {
   user_id: string;
   role: MemberRole;
   display_name: string;
+  /** Onboarding signal: non_technical | technical | null (not asked yet). */
+  builder_type: string | null;
   created_at: string;
 }
 

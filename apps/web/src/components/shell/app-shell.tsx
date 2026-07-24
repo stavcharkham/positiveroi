@@ -53,7 +53,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export interface AppShellProps {
-  workspace: { name: string; slug: string };
+  workspace: { name: string; slug: string; logoUrl?: string | null };
   workspaces: { name: string; slug: string }[];
   role: MemberRole;
   displayName: string;
@@ -235,16 +235,32 @@ function NavLink({
 // Top bar pieces
 // ---------------------------------------------------------------------------
 
+/** The company favicon from onboarding; hides itself if the URL stops resolving. */
+function WorkspaceLogo({ src }: { src: string }) {
+  const [failed, setFailed] = React.useState(false);
+  if (failed) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- tiny external favicon, next/image needs domain allowlisting
+    <img
+      src={src}
+      alt=""
+      className="size-4 rounded-[3px]"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function WorkspaceSwitcher({
   current,
   workspaces,
 }: {
-  current: { name: string; slug: string };
+  current: { name: string; slug: string; logoUrl?: string | null };
   workspaces: { name: string; slug: string }[];
 }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle">
+        {current.logoUrl && <WorkspaceLogo src={current.logoUrl} />}
         <span className="max-w-40 truncate">{current.name}</span>
         <ChevronsUpDown className="size-3.5 text-foreground-muted" aria-hidden />
       </DropdownMenuTrigger>

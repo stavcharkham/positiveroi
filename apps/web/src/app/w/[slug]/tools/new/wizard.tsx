@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ReceiptFlow } from "@/components/product/receipt-flow";
+import { onboardingKeySlot } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 import { BaselineField } from "../baseline-field";
 import { CreditField } from "../credit-field";
@@ -53,6 +54,8 @@ export interface ToolWizardProps {
   members: { id: string; name: string }[];
   canPickOwner: boolean;
   endpoint: string;
+  /** First-tool flow from onboarding: fresh key inline, celebration + tour. */
+  onboarding?: boolean;
 }
 
 /**
@@ -66,8 +69,22 @@ function ToolWizard({
   members,
   canPickOwner,
   endpoint,
+  onboarding = false,
 }: ToolWizardProps) {
   const [step, setStep] = React.useState(0);
+  // The onboarding flow parks the fresh ingest key in sessionStorage so it
+  // survives the redirect without ever touching a URL. Read when the tool
+  // is created (a click, safely post-hydration) — it is only shown on the
+  // capture step.
+  const [onboardingKey, setOnboardingKey] = React.useState<string | null>(null);
+  function readOnboardingKey() {
+    if (!onboarding) return;
+    try {
+      setOnboardingKey(sessionStorage.getItem(onboardingKeySlot(workspaceSlug)));
+    } catch {
+      // Storage unavailable — the capture step shows the placeholder.
+    }
+  }
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [ownerId, setOwnerId] = React.useState(self.id);
@@ -125,6 +142,7 @@ function ToolWizard({
         ...(override !== null ? { minutes_saved_override: override } : {}),
       });
       if (result.ok && result.toolId && result.toolSlug) {
+        readOnboardingKey();
         setTool({ id: result.toolId, slug: result.toolSlug });
         setStep(3);
       } else {
@@ -220,6 +238,8 @@ function ToolWizard({
               rawMinutes={rawMinutes}
               highJudgment={highJudgment === true}
               overrideMinutes={overrideForDisplay}
+              ingestKey={onboardingKey}
+              onboarding={onboarding}
             />
           )}
         </motion.div>

@@ -8,10 +8,13 @@ export const metadata: Metadata = { title: "Register a tool" };
 
 export default async function NewToolPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ onboarding?: string }>;
 }) {
   const { slug } = await params;
+  const { onboarding } = await searchParams;
   const { user, workspace, member } = await requireMember(slug);
 
   // Leads and admins can register a tool on behalf of another member.
@@ -36,6 +39,7 @@ export default async function NewToolPage({
       members={members}
       canPickOwner={canPickOwner}
       endpoint={await requestOrigin()}
+      onboarding={onboarding === "1"}
     />
   );
 }

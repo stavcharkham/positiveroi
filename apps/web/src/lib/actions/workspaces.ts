@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { DEFAULT_CURRENCY, SEEDED_METRICS } from "@positiveroi/core";
 import { generateApiKey } from "@/lib/api-keys";
-import { requireUser } from "@/lib/guards";
+import { requireMember, requireUser } from "@/lib/guards";
+import { normalizeWebsite } from "@/lib/profile";
 import { getAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -99,6 +100,90 @@ export async function createWorkspaceAction(
   } catch {
     await admin.from("workspaces").delete().eq("id", workspace.id);
     return { ok: false, error: "Could not finish setting up the workspace. Try again." };
+  }
+}
+
+const profileSchema = z.object({
+  website: z.string().trim().max(300).optional(),
+  companySize: z.enum(["just_me", "2_10", "11_50", "51_plus"]).optional(),
+  builderType: z.enum(["non_technical", "technical"]).optional(),
+});
+
+export interface ProfileActionResult {
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * The onboarding questions, saved after the workspace exists. builder_type
+ * belongs to the calling member (anyone sets their own); website and
+ * company size belong to the workspace (admins only — during onboarding
+ * the creator is one). The logo is fetched from the website's favicon,
+ * silently skipped when the site has none.
+ */
+export async function saveWorkspaceProfileAction(
+  workspaceSlug: string,
+  input: unknown,
+): Promise<ProfileActionResult> {
+  const { user, workspace, member } = await requireMember(workspaceSlug);
+
+  const parsed = profileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Check the form and try again." };
+  }
+  const admin = getAdminClient();
+
+  if (parsed.data.builderType) {
+    const { error } = await admin
+      .from("members")
+      .update({ builder_type: parsed.data.builderType })
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", user.id);
+    if (error) return { ok: false, error: "Could not save. Try again." };
+  }
+
+  const isAdmin = member.role === "admin";
+  const website =
+    parsed.data.website !== undefined
+      ? normalizeWebsite(parsed.data.website)
+      : null;
+  if (isAdmin && (website || parsed.data.companySize)) {
+    const update: Record<string, string> = {};
+    if (website) {
+      update.website = website;
+      const logo = await findFavicon(website);
+      if (logo) update.logo_url = logo;
+    }
+    if (parsed.data.companySize) update.company_size = parsed.data.companySize;
+    const { error } = await admin
+      .from("workspaces")
+      .update(update)
+      .eq("id", workspace.id);
+    if (error) return { ok: false, error: "Could not save. Try again." };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * The workspace's own /favicon.ico, when it answers with an image within
+ * 3s. No third-party lookup services — the only request goes to the site
+ * the admin just typed.
+ */
+async function findFavicon(websiteOrigin: string): Promise<string | null> {
+  const url = `${websiteOrigin}/favicon.ico`;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(url, { signal: controller.signal, redirect: "follow" });
+    clearTimeout(timer);
+    const type = res.headers.get("content-type") ?? "";
+    if (res.ok && (type.startsWith("image/") || type.includes("icon"))) {
+      return url;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 

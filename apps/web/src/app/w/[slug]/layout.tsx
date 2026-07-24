@@ -26,7 +26,11 @@ export default async function WorkspaceLayout({
 
   return (
     <AppShell
-      workspace={{ name: workspace.name, slug: workspace.slug }}
+      workspace={{
+        name: workspace.name,
+        slug: workspace.slug,
+        logoUrl: workspace.logo_url,
+      }}
       workspaces={workspaces}
       role={member.role}
       displayName={member.display_name || (user.email?.split("@")[0] ?? "You")}

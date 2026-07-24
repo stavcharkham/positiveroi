@@ -106,7 +106,15 @@ Goal: skill runs made inside Cowork or other sandboxed environments count, with 
 - [ ] I3 Loud failure instead of silence: when the plugin can't reach the server from a sandbox, tell the user in-session that runs aren't being counted and what to ask their admin
 - [ ] I4 Docs: a "tracking from Cowork/sandboxes" section in the plugin quickstart
 
-## Deploy
+## Deploy (moved to Stav's personal Vercel, 2026-07-24)
+
+- [x] **Live at https://positiveroi-web.vercel.app** — Stav imported the GitHub repo into his personal Vercel (project `positiveroi-web`, root `apps/web`, env pasted from `.env.local` + `NEXT_PUBLIC_DEPLOYMENT=hosted`). Smoke-tested live: all public pages 200, new Track G/H copy serving, ingest API rejects unauthenticated calls, signed-in dashboard renders with real DB data (QA user, deleted after).
+- [ ] **Magic-link redirect**: add `https://positiveroi-web.vercel.app/**` to Supabase → Authentication → URL Configuration → Redirect URLs (and set Site URL to the same origin). Until then real sign-ins bounce.
+- [ ] **Decide the push-to-production model**: the GitHub import auto-deploys `main` to production. Either accept continuous deploy (fine in beta) or set the production branch to a separate branch so shipping stays deliberate.
+- [ ] **Delete the two stale Deep33 projects** (`positiveroi`, `positive-roi`) so nothing deploys to the wrong account again.
+- [ ] Post-launch: seed demo workspace, link from README; buy positiveroi.dev and point it at the personal project.
+
+## Deploy history (superseded)
 
 - [x] Vercel project `positiveroi` created (Deep33 org, prj_AaoJ2kVuzZ048EiDcARmjUY57fBV). Monorepo build: root `apps/web`, install + `turbo build --filter=web` from the workspace root. Env set (Supabase URL/anon/service-role, HOSTED_ADMIN_EMAILS, NEXT_PUBLIC_DEPLOYMENT=hosted) on all targets.
 - [x] **Preview deployed and smoke-tested 2026-07-11: 28/28 gate checks pass against the live Vercel runtime** (SSR dashboards, all API routes, ingest, read-API scopes, CORS, public page + badge). URL: `positiveroi-539jymeoa-deep33.vercel.app`. (A bare `vercel deploy` auto-promoted the first build to production; the production aliases were removed immediately, so `positiveroi.vercel.app` 404s — **not launched**, per Stav's "preview first" choice.)

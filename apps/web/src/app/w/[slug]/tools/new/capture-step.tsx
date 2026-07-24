@@ -178,8 +178,8 @@ function CaptureStep({
               </Button>
             </div>
             <p className="mt-3 text-xs text-foreground-muted">
-              A test run proves the pipe and is never counted. A manual run is
-              real and counts.
+              A test run checks the connection and is never counted. A manual
+              run is real and counts.
             </p>
 
             <div className="mt-5 border-t border-border pt-4">

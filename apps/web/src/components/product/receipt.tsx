@@ -61,16 +61,16 @@ function Receipt({
       : null;
 
   const lines: { label: string; value: string; cut?: boolean }[] = [
-    { label: "Baseline, by hand", value: valid ? `${fmt(rawMinutes)} min` : "—" },
+    { label: "By hand, each time", value: valid ? `${fmt(rawMinutes)} min` : "—" },
     {
-      label: `Confidence cut −${confidencePct}%`,
+      label: `Trust cut −${confidencePct}%`,
       value: afterConfidence !== null ? `${fmt(afterConfidence)} min` : "—",
       cut: true,
     },
   ];
   if (highJudgment) {
     lines.push({
-      label: "Judgment cut ÷2",
+      label: "A person still checks ÷2",
       value: credited !== null ? `${fmt(credited)} min` : "—",
       cut: true,
     });
@@ -85,7 +85,7 @@ function Receipt({
     >
       <div className="flex items-center justify-between border-b border-dashed border-border px-4 py-2.5">
         <span className="text-[0.6875rem] uppercase tracking-[0.14em] text-foreground-muted">
-          The Undercount
+          Your receipt
         </span>
         <span className="flex items-center gap-1.5">
           {override !== null && (
@@ -168,9 +168,9 @@ function Receipt({
             <p className="mt-2 text-xs leading-relaxed text-foreground-muted">
               {override === null ? (
                 <>
-                  Your tool gets credit for {fmt(credited!)} of the{" "}
-                  {fmt(rawMinutes)} minutes you claimed. When someone
-                  challenges this number, it wins.
+                  Your tool earns {fmt(credited!)} of the {fmt(rawMinutes)}{" "}
+                  minutes you claimed. When someone questions this number,
+                  it holds up.
                 </>
               ) : (
                 <>
@@ -182,7 +182,7 @@ function Receipt({
                 href="/methodology"
                 className="text-accent hover:underline"
               >
-                Why do we cut?
+                How the cut works
               </Link>
             </p>
           </ReceiptLine>

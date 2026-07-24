@@ -68,9 +68,9 @@ function CreditPanel({
         Credited minutes per run
       </h2>
       <p className="mt-1 max-w-lg text-sm leading-relaxed text-foreground-secondary">
-        The suggestion is the Undercount from the baseline:{" "}
-        {fmtNum(suggested)} min. Set your own number and every receipt labels
-        it builder-set. Past runs keep the credit they already earned.
+        We suggest {fmtNum(suggested)} min, based on your by-hand time and
+        the cuts. Set your own number and every receipt labels it builder-set.
+        Past runs keep the credit they already earned.
       </p>
 
       <CreditField

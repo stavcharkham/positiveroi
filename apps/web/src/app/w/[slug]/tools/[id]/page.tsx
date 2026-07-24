@@ -564,7 +564,7 @@ async function BaselineHistorySection({
                 {isCreation
                   ? `set the baseline to ${fmtNum(Number(change.new_raw_estimate))} min`
                   : `changed the baseline ${fmtNum(Number(change.old_raw_estimate))} → ${fmtNum(Number(change.new_raw_estimate))} min`}
-                {", judgment cut "}
+                {", person-still-checks "}
                 {change.new_high_judgment ? "on" : "off"}
               </span>
               <span className="font-mono text-xs text-foreground-muted">

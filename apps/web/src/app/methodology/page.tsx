@@ -21,7 +21,7 @@ import { SiteHeader } from "../_marketing/site-header";
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "The Undercount: how PositiveROI credits time saved. Baselines take a 40% confidence cut, then a further judgment cut, and every number drills down to its runs.",
+    "The Undercount: how PositiveROI credits time saved. Every claim takes a 40% trust cut, then a judgment cut when a person still checks, and every number drills down to its runs.",
 };
 
 const CONFIDENCE_CUT_PCT = Math.round((1 - CONSERVATISM_FACTOR) * 100);
@@ -84,7 +84,7 @@ export default function MethodologyPage() {
               </p>
               <p className="mt-1.5">
                 <strong className="font-semibold text-foreground">
-                  Confidence cut.
+                  The trust cut.
                 </strong>{" "}
                 Only {CREDITED_PCT}% of the baseline is credited. This absorbs
                 estimation optimism, the runs that partially fail, and the
@@ -95,9 +95,9 @@ export default function MethodologyPage() {
               <p className="font-mono text-xs text-accent">cut 2 · ÷2</p>
               <p className="mt-1.5">
                 <strong className="font-semibold text-foreground">
-                  Judgment cut.
+                  The judgment cut.
                 </strong>{" "}
-                If a human still makes a meaningful decision in the task
+                If a person still makes a real decision in the task
                 (reviewing, approving, editing before send), credit is halved
                 again. The tool did not remove the work; it removed part of it.
               </p>

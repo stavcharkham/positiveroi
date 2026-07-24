@@ -90,7 +90,7 @@ function CreditField({ suggested, value, onChange, id, className }: CreditFieldP
         </p>
       ) : (
         <p className="text-xs leading-relaxed text-foreground-muted">
-          Leave empty to credit the suggested Undercount.
+          Leave empty to use the suggested number.
         </p>
       )}
     </div>

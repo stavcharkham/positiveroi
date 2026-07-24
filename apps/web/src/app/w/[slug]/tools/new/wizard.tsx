@@ -44,7 +44,7 @@ const TYPE_ICONS: Record<ToolType, React.ComponentType<{ className?: string }>> 
   app: AppWindow,
 };
 
-const STEP_TITLES = ["What is it", "Baseline", "The cuts", "Capture"] as const;
+const STEP_TITLES = ["What is it", "Time by hand", "Your number", "Connect it"] as const;
 
 export interface ToolWizardProps {
   workspaceSlug: string;
@@ -420,10 +420,10 @@ function BaselineStep({
   return (
     <div className="rounded-lg border border-border bg-surface p-6 shadow-xs">
       <h2 className="text-[0.9375rem] font-semibold text-foreground">
-        Before this tool, how many minutes did one round take by hand?
+        Before this tool, how long did this take by hand, each time?
       </h2>
       <p className="mt-1 text-sm text-foreground-secondary">
-        One honest number. The receipt cuts it down from here.
+        One honest number, in minutes. Watch what happens to it on your receipt.
       </p>
 
       <BaselineField
@@ -486,11 +486,11 @@ function CutsStep({
   return (
     <div className="rounded-lg border border-border bg-surface p-6 shadow-xs">
       <h2 className="text-[0.9375rem] font-semibold text-foreground">
-        Does a human decision stay in the loop?
+        Does a person still check each run?
       </h2>
       <p className="mt-1 text-sm text-foreground-secondary">
-        If a person still reviews, edits, or approves each run&apos;s output,
-        credit is halved. Watch the receipt.
+        If someone still reviews, edits, or approves what comes out, we halve
+        the credit.
       </p>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
@@ -549,7 +549,7 @@ function CutsStep({
         href="/methodology"
         className="mt-4 inline-block text-[0.8125rem] font-medium text-accent hover:underline"
       >
-        Why do we cut?
+        How the cut works
       </Link>
 
       {suggested !== null && (
@@ -558,8 +558,8 @@ function CutsStep({
             Your credited minutes per run
           </h3>
           <p className="mt-1 text-sm text-foreground-secondary">
-            The suggestion is the Undercount on the receipt:{" "}
-            {fmtNum(suggested)} min. If you know better, set your own number.
+            We suggest {fmtNum(suggested)} min, the number on your receipt. If
+            you know the real number, set it yourself.
           </p>
           <CreditField
             suggested={suggested}

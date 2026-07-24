@@ -8,7 +8,7 @@ import type { ToolType } from "@positiveroi/core";
 export const TOOL_TYPE_META: Record<ToolType, { label: string; blurb: string }> = {
   automation: {
     label: "Automation",
-    blurb: "Runs on a trigger: Zapier, n8n, cron, a webhook.",
+    blurb: "Runs on its own: a schedule, a webhook, a workflow.",
   },
   skill: {
     label: "Skill",
@@ -16,11 +16,11 @@ export const TOOL_TYPE_META: Record<ToolType, { label: string; blurb: string }> 
   },
   agent: {
     label: "Agent",
-    blurb: "An autonomous agent that logs its own runs over MCP.",
+    blurb: "An agent that works on its own and reports its own runs.",
   },
   app: {
     label: "App",
-    blurb: "An internal app or script with the SDK inside.",
+    blurb: "An internal app or script your team uses.",
   },
 };
 

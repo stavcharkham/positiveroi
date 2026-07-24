@@ -250,7 +250,7 @@ function ToolWizard({
               key={`${step >= 2}-${highJudgment}`}
               rawMinutes={rawMinutes}
               highJudgment={step >= 2 ? highJudgment : null}
-              overrideMinutes={overrideForDisplay}
+              overrideMinutes={step >= 2 ? overrideForDisplay : undefined}
               closingLine={step >= 2 && highJudgment !== null}
               onAdjust={
                 step === 2 && highJudgment !== null

@@ -52,6 +52,19 @@ function CaptureStep({
 }: CaptureStepProps) {
   const [firstRun, setFirstRun] = React.useState<FirstRunPayload | null>(null);
   const [testSent, setTestSent] = React.useState(false);
+  // Leaving the wizard for any reason (skip, navigation) drops the one
+  // plaintext copy of the onboarding key. Display state is unaffected —
+  // the wizard already read it.
+  React.useEffect(() => {
+    if (!onboarding) return;
+    return () => {
+      try {
+        sessionStorage.removeItem(onboardingKeySlot(workspaceSlug));
+      } catch {
+        // Storage unavailable — nothing to clear.
+      }
+    };
+  }, [onboarding, workspaceSlug]);
   const [pending, setPending] = React.useState<"test" | "manual" | null>(null);
   const inFlight = React.useRef(false);
 

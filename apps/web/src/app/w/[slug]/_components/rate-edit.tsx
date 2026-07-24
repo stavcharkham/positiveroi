@@ -77,7 +77,7 @@ function RateEdit({
               Used to convert credited hours to money. Changeable anytime.
             </p>
           </div>
-          <Button type="submit" size="sm" disabled={saving}>
+          <Button type="submit" size="sm" disabled={saving || value.trim() === ""}>
             {saving ? "Saving…" : "Save rate"}
           </Button>
         </form>

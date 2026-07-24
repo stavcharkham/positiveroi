@@ -154,7 +154,8 @@ create table workspaces (
   slug              text not null unique
                       check (slug ~ '^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$'),
   timezone          text not null default 'UTC',
-  hourly_rate_cents integer not null default 6000 check (hourly_rate_cents between 0 and 100000000),
+  -- nullable with no default since 0010: null = no rate set, dashboards show hours only
+  hourly_rate_cents integer check (hourly_rate_cents between 0 and 100000000),
   currency          char(3) not null default 'USD',
   public_enabled    boolean not null default false,
   public_slug       text unique

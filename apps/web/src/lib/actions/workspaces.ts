@@ -4,6 +4,7 @@ import { z } from "zod";
 import { DEFAULT_CURRENCY, SEEDED_METRICS } from "@positiveroi/core";
 import { generateApiKey } from "@/lib/api-keys";
 import { requireMember, requireUser } from "@/lib/guards";
+import { isPrivateIp } from "@/lib/net-guard";
 import { normalizeWebsite } from "@/lib/profile";
 import { getAdminClient } from "@/lib/supabase/admin";
 
@@ -147,6 +148,13 @@ export async function saveWorkspaceProfileAction(
     parsed.data.website !== undefined
       ? normalizeWebsite(parsed.data.website)
       : null;
+  if (
+    parsed.data.website !== undefined &&
+    parsed.data.website.trim() !== "" &&
+    website === null
+  ) {
+    return { ok: false, error: "That website doesn't look like a web address." };
+  }
   if (isAdmin && (website || parsed.data.companySize)) {
     const update: Record<string, string> = {};
     if (website) {
@@ -168,14 +176,22 @@ export async function saveWorkspaceProfileAction(
 /**
  * The workspace's own /favicon.ico, when it answers with an image within
  * 3s. No third-party lookup services — the only request goes to the site
- * the admin just typed.
+ * the admin just typed. Guarded against SSRF: https only, default port,
+ * every resolved IP must be public, and redirects are not followed.
  */
 async function findFavicon(websiteOrigin: string): Promise<string | null> {
-  const url = `${websiteOrigin}/favicon.ico`;
   try {
+    const origin = new URL(websiteOrigin);
+    if (origin.protocol !== "https:" || origin.port !== "") return null;
+    const { lookup } = await import("node:dns/promises");
+    const addresses = await lookup(origin.hostname, { all: true });
+    if (addresses.length === 0 || addresses.some((a) => isPrivateIp(a.address))) {
+      return null;
+    }
+    const url = `https://${origin.hostname}/favicon.ico`;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(url, { signal: controller.signal, redirect: "follow" });
+    const res = await fetch(url, { signal: controller.signal, redirect: "manual" });
     clearTimeout(timer);
     const type = res.headers.get("content-type") ?? "";
     if (res.ok && (type.startsWith("image/") || type.includes("icon"))) {

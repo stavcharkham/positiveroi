@@ -20,7 +20,7 @@ The login page shows the Google button automatically once the provider is on; no
 
 ## Later (not blocking)
 
-- **Sandbox/Cowork skill tracking**: hook capture is not guaranteed in fresh sandboxed environments (config lost, network restricted). If Cowork users matter as a channel, prioritize env-var-only plugin config + getting the ingest domain onto sandbox allowlists. Details in CONTEXT 2026-07-24 third round.
+- **Sandbox/Cowork skill tracking**: planned as Track I in PLAN.md (Stav 2026-07-24: build later). Say when to schedule it.
 
 - **Buy positiveroi.dev** and point it at the Vercel project.
 - **Create the npm org** `positiveroi` (or confirm `@positiveroi` scope) so core/sdk/mcp-server can publish; release workflow ready, just disabled.

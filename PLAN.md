@@ -97,6 +97,15 @@ Decisions in CONTEXT.md 2026-07-24. All six tasks done and live-verified; review
 - [x] H6 "How the cut works" becomes a popup in the wizard — no navigation, no lost state
 - [x] H7 API key separated from the agent prompt: prompts reference an env var, key box tells the human to set it themselves and never paste it into an AI chat
 
+## Track I: sandbox/Cowork skill tracking (parked — Stav 2026-07-24: "we'll add it later")
+
+Goal: skill runs made inside Cowork or other sandboxed environments count, with setup done once instead of per session. Flow agreed in chat 2026-07-24; details in CONTEXT.
+
+- [ ] I1 Plugin configurable purely through injected settings (key, endpoint, tracked-skills list via env vars / Cowork plugin settings — capture.mjs already prefers env vars, extend to the tools list)
+- [ ] I2 Ingest domain onto sandbox allowlists (ship on the standard list or a one-time admin approval path)
+- [ ] I3 Loud failure instead of silence: when the plugin can't reach the server from a sandbox, tell the user in-session that runs aren't being counted and what to ask their admin
+- [ ] I4 Docs: a "tracking from Cowork/sandboxes" section in the plugin quickstart
+
 ## Deploy
 
 - [x] Vercel project `positiveroi` created (Deep33 org, prj_AaoJ2kVuzZ048EiDcARmjUY57fBV). Monorepo build: root `apps/web`, install + `turbo build --filter=web` from the workspace root. Env set (Supabase URL/anon/service-role, HOSTED_ADMIN_EMAILS, NEXT_PUBLIC_DEPLOYMENT=hosted) on all targets.

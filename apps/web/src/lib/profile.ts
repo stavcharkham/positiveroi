@@ -14,13 +14,13 @@ export type CompanySize = (typeof COMPANY_SIZES)[number]["value"];
 export const BUILDER_TYPES = [
   {
     value: "non_technical",
-    label: "I build without writing code",
-    blurb: "Claude Code, no-code tools, prompts — the AI writes the code.",
+    label: "Non-technical builder",
+    blurb: "I build with AI tools like Claude Code, without a coding background.",
   },
   {
     value: "technical",
-    label: "I write code",
-    blurb: "Comfortable in a codebase, with or without AI help.",
+    label: "Technical builder",
+    blurb: "I read and write code myself.",
   },
 ] as const;
 export type BuilderType = (typeof BUILDER_TYPES)[number]["value"];

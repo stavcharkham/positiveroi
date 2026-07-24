@@ -74,7 +74,7 @@ function RateEdit({
               autoFocus
             />
             <p className="text-xs text-foreground-muted">
-              Used to convert credited hours to money. Changeable anytime.
+              Used to convert saved hours to money. Changeable anytime.
             </p>
           </div>
           <Button type="submit" size="sm" disabled={saving || value.trim() === ""}>

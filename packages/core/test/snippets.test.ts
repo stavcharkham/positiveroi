@@ -12,10 +12,15 @@ describe("agentPrompt", () => {
     for (const type of TOOL_TYPES) {
       const prompt = agentPrompt(type, ctx);
       expect(prompt).toContain(ctx.toolSlug);
-      expect(prompt).toContain(ctx.apiKey);
+      // The key must NEVER ride inside a prompt destined for an AI chat —
+      // the human sets it out of band (env var / impact-setup).
+      expect(prompt).not.toContain(ctx.apiKey);
       // The skill path goes through the plugin; endpoint config lives in
       // its setup flow, not the prompt.
       if (type !== "skill") expect(prompt).toContain(ctx.endpoint);
+      if (type === "automation" || type === "app" || type === "agent") {
+        expect(prompt).toContain("POSITIVEROI_API_KEY");
+      }
       // Every prompt links the docs or the repo for the rest.
       expect(prompt).toMatch(/github\.com\/stavcharkham\/positiveroi/);
     }

@@ -75,7 +75,7 @@ function RunsTable({ rows }: { rows: RunDisplayRow[] }) {
                 <DetailItem label="Occurred at" value={row.occurredAtIso} mono />
                 <DetailItem label="Source" value={row.source} mono />
                 <DetailItem
-                  label="Credited minutes"
+                  label="Minutes saved"
                   value={`${row.minutes}${row.overridden ? " (overridden by the caller)" : ""}`}
                   mono
                 />

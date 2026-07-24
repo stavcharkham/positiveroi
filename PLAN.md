@@ -87,6 +87,16 @@ Decisions in CONTEXT.md 2026-07-24. All six tasks done and live-verified; review
 - [x] G5 Agent prompts in the capture step for all builders: copy-paste prompt per tool type (Claude Code / Cursor / Codex), key in its own box with password-style subtext, plugin surfaced for skills, MCP for agents, code detail behind a toggle (commit 2c4833d)
 - [x] G6 Onboarding rebuild: instant signup → company name + website (logo fetched from the site) + size (Just me / 2-10 / 11-50 / 51+) + builder type (kept as signal; UI same for both) → connect first tool (embedded capture with G5 prompts + inline key) → live wait → confetti + first receipt → tour (metrics, invite team, public page). Invited members get builder type only (commit 05eae8d)
 
+## Track H: Track-G polish (Stav's second hands-on review, 2026-07-24)
+
+- [ ] H1 Builder question rephrased: "Are you a technical or non-technical builder?" — everyone builds with AI
+- [ ] H2 Onboarding opening screen before the wizard: "Let's connect your first tool"
+- [ ] H3 Skill path: plugin steps shown openly (not behind a toggle) — the plugin IS the capture for skills
+- [ ] H4 "By hand" framing → "before this tool" (the old way may itself have been ChatGPT): step title, question, receipt labels
+- [ ] H5 "Credit/credited" off the screens → "time saved" vocabulary; step title "Your number" → "Time saved"
+- [ ] H6 "How the cut works" becomes a popup in the wizard — no navigation, no lost state
+- [ ] H7 API key separated from the agent prompt: prompts reference an env var, key box tells the human to set it themselves and never paste it into an AI chat
+
 ## Deploy
 
 - [x] Vercel project `positiveroi` created (Deep33 org, prj_AaoJ2kVuzZ048EiDcARmjUY57fBV). Monorepo build: root `apps/web`, install + `turbo build --filter=web` from the workspace root. Env set (Supabase URL/anon/service-role, HOSTED_ADMIN_EMAILS, NEXT_PUBLIC_DEPLOYMENT=hosted) on all targets.

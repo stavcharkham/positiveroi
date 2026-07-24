@@ -40,7 +40,7 @@ function MultiplierRing({
     <div
       className={cn("relative inline-flex flex-col items-center", className)}
       role="img"
-      aria-label={`${formatHours(hours30d)} of ${MULTIPLIER_HOURS_30D} credited hours in the last 30 days — ${pct}% of a full-time job`}
+      aria-label={`${formatHours(hours30d)} of ${MULTIPLIER_HOURS_30D} saved hours in the last 30 days — ${pct}% of a full-time job`}
     >
       <div className="relative" style={{ width: size, height: size }}>
         {earned && (
@@ -119,7 +119,7 @@ function MultiplierRing({
         {totalRuns === 0
           ? "Your multiplier starts at run one."
           : earned
-            ? "A full-time job's worth of credited time. Earned, not claimed."
+            ? "A full-time job's worth of saved time. Earned, not claimed."
             : `${pct}% of a full-time job, at the undercounted rate.`}
       </p>
     </div>

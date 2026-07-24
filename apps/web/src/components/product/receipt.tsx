@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { motion } from "motion/react";
+import { CutExplainer } from "@/components/product/cut-explainer";
 import {
   CONSERVATISM_FACTOR,
   computeMinutesSavedPerRun,
@@ -61,7 +61,7 @@ function Receipt({
       : null;
 
   const lines: { label: string; value: string; cut?: boolean }[] = [
-    { label: "By hand, each time", value: valid ? `${fmt(rawMinutes)} min` : "—" },
+    { label: "Before this tool", value: valid ? `${fmt(rawMinutes)} min` : "—" },
     {
       label: `Trust cut −${confidencePct}%`,
       value: afterConfidence !== null ? `${fmt(afterConfidence)} min` : "—",
@@ -128,7 +128,7 @@ function Receipt({
         {override === null ? (
           <ReceiptLine index={lines.length} animate={animate}>
             <span className="text-[0.8125rem] font-medium text-foreground">
-              Credited time
+              Time saved
             </span>
             <span className="numeral text-2xl leading-none text-accent">
               {credited !== null ? `${fmt(credited)}` : "—"}
@@ -141,7 +141,7 @@ function Receipt({
           <>
             <ReceiptLine index={lines.length} animate={animate}>
               <span className="text-[0.8125rem] text-foreground-secondary">
-                Suggested credit
+                Suggested
               </span>
               <span className="text-[0.8125rem] tabular-nums text-foreground-secondary">
                 {fmt(credited!)} min/run
@@ -174,16 +174,11 @@ function Receipt({
                 </>
               ) : (
                 <>
-                  You set this tool&apos;s credit to {fmt(override)} min/run.
-                  The suggested undercount was {fmt(credited!)}.
+                  You set this tool&apos;s saved time to {fmt(override)}{" "}
+                  min/run. The suggestion was {fmt(credited!)}.
                 </>
               )}{" "}
-              <Link
-                href="/methodology"
-                className="text-accent hover:underline"
-              >
-                How the cut works
-              </Link>
+              <CutExplainer className="text-xs" />
             </p>
           </ReceiptLine>
         )}

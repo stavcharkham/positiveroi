@@ -62,7 +62,7 @@ function SettingsPanel({
       });
       if (result.ok && result.creditedPerRun !== undefined) {
         toast.success(
-          `Baseline saved. Each run now credits ${fmtNum(result.creditedPerRun)} minutes.`,
+          `Baseline saved. Each run now saves ${fmtNum(result.creditedPerRun)} minutes.`,
         );
         router.refresh();
       } else {
@@ -120,7 +120,7 @@ function SettingsPanel({
                 onCheckedChange={setHighJudgment}
               />
               <Label htmlFor="settings-judgment" className="cursor-pointer">
-                A human decision stays in the loop (credit halved)
+                A human decision stays in the loop (saved time halved)
               </Label>
             </div>
 
@@ -146,7 +146,7 @@ function SettingsPanel({
           <div>
             <Receipt rawMinutes={rawMinutes} highJudgment={highJudgment} />
             <p className="mt-2 text-xs text-foreground-muted">
-              The receipt updates as you edit. Past runs keep the credit they
+              The receipt updates as you edit. Past runs keep the time they
               already earned.
             </p>
           </div>

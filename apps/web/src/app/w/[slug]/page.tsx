@@ -125,7 +125,7 @@ export default async function CompanyDashboardPage({
           drillLabel="See the builders behind the multiplier"
           label="Multiplier equivalent"
           value={formatFte(fte)}
-          sub={`full-time jobs · ${MULTIPLIER_HOURS_30D} credited hrs/mo = 1 FTE`}
+          sub={`full-time jobs · ${MULTIPLIER_HOURS_30D} saved hrs/mo = 1 FTE`}
         />
         {workspace.hourly_rate_cents !== null ? (
           <HeadlineTile
@@ -174,7 +174,7 @@ export default async function CompanyDashboardPage({
         <CardHeader>
           <CardTitle>Hours saved over time</CardTitle>
           <CardDescription>
-            Credited hours per {bucket}, {label}.
+            Hours saved per {bucket}, {label}.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -205,7 +205,7 @@ export default async function CompanyDashboardPage({
         <LeaderboardCard
           title="Builders"
           viewAllHref={withPeriod(`${base}/builders`, periodName)}
-          empty="No credited runs from any builder yet."
+          empty="No runs from any builder yet."
         >
           {boards.builders.slice(0, 5).map((b, i) => (
             <BuilderRow key={b.userId} row={b} rank={i + 1} max={boards.builders[0]?.hours ?? 0} />
@@ -214,7 +214,7 @@ export default async function CompanyDashboardPage({
         <LeaderboardCard
           title="Tools"
           viewAllHref={withPeriod(`${base}/tools`, periodName)}
-          empty="No tool has credited runs yet."
+          empty="No tool has logged runs yet."
         >
           {boards.tools.slice(0, 5).map((t, i) => (
             <ToolRow

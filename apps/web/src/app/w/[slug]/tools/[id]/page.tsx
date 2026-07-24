@@ -120,7 +120,7 @@ export default async function ToolDetailPage({
               <Avatar name={ownerName} size="sm" /> {ownerName}
             </span>
             <span className="font-mono">
-              {fmtNum(creditPerRun)} min/run credited
+              {fmtNum(creditPerRun)} min/run saved
               {override !== null && (
                 <span className="ml-1.5 rounded-full bg-accent-soft px-2 py-px text-accent">
                   builder-set
@@ -228,7 +228,7 @@ async function OverviewTab({
                       ? null
                       : Number(tool.minutes_saved_override),
                   ),
-                )} credited min/run`
+                )} saved min/run`
           }
           undercounted
         />
@@ -616,10 +616,10 @@ async function CreditHistorySection({
             "former member";
           const line =
             change.new_value === null
-              ? "went back to the suggested credit"
+              ? "went back to the suggestion"
               : change.old_value === null
-                ? `set the credit to ${fmtNum(Number(change.new_value))} min/run`
-                : `changed the credit ${fmtNum(Number(change.old_value))} → ${fmtNum(Number(change.new_value))} min/run`;
+                ? `set the saved time to ${fmtNum(Number(change.new_value))} min/run`
+                : `changed the saved time ${fmtNum(Number(change.old_value))} → ${fmtNum(Number(change.new_value))} min/run`;
           return (
             <li
               key={change.id}

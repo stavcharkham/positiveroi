@@ -205,7 +205,7 @@ function ProfileStep({ slug, onDone }: { slug: string; onDone: () => void }) {
         </div>
 
         <div className="space-y-1.5">
-          <Label>How do you build?</Label>
+          <Label>Are you a technical or a non-technical builder?</Label>
           <div className="grid gap-2 sm:grid-cols-2">
             {BUILDER_TYPES.map((option) => {
               const selected = builderType === option.value;

@@ -54,7 +54,7 @@ function CreditField({ suggested, value, onChange, id, className }: CreditFieldP
               e.target.value === "" ? onChange(null) : set(e.target.valueAsNumber)
             }
             className="numeral h-11 pr-16 text-center text-xl"
-            aria-label="Credited minutes per run"
+            aria-label="Saved minutes per run"
             aria-invalid={invalid}
             aria-describedby={invalid && id ? `${id}-error` : undefined}
           />
@@ -79,7 +79,7 @@ function CreditField({ suggested, value, onChange, id, className }: CreditFieldP
           role="alert"
           className="rounded-md bg-warning-soft px-3 py-2 text-xs leading-relaxed text-warning"
         >
-          The credit must be above 0 and at most {RAW_ESTIMATE_MAX_DASHBOARD}{" "}
+          The number must be above 0 and at most {RAW_ESTIMATE_MAX_DASHBOARD}{" "}
           minutes per run.
         </p>
       ) : overridden ? (

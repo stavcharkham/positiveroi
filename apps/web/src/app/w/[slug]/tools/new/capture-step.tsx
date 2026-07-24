@@ -284,7 +284,7 @@ function FirstRunLanded({
           </p>
           <p className="mt-0.5 text-xs text-foreground-muted">
             {new Date(firstRun.occurredAt).toLocaleString()} ·{" "}
-            {fmtNum(firstRun.minutesSaved)} min credited
+            {fmtNum(firstRun.minutesSaved)} min saved
           </p>
         </div>
         <SourceBadge source={firstRun.source} />

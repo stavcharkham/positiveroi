@@ -145,7 +145,7 @@ export default async function ToolsPage({
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
           <div className="hidden grid-cols-[minmax(0,1fr)_6rem_6.5rem_7rem_6.5rem_8.5rem] items-center gap-3 border-b border-border px-5 py-2.5 md:grid">
-            {["Tool", "Type", "Credited", "Activity", `Hours · ${hoursLabel}`, "Status"].map(
+            {["Tool", "Type", "Time saved", "Activity", `Hours · ${hoursLabel}`, "Status"].map(
               (label) => (
                 <span
                   key={label}

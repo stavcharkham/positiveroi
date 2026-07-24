@@ -65,12 +65,12 @@ function CreditPanel({
   return (
     <section className="rounded-lg border border-border bg-surface p-6 shadow-xs">
       <h2 className="text-[0.9375rem] font-semibold text-foreground">
-        Credited minutes per run
+        Time saved per run
       </h2>
       <p className="mt-1 max-w-lg text-sm leading-relaxed text-foreground-secondary">
         We suggest {fmtNum(suggested)} min, based on your by-hand time and
         the cuts. Set your own number and every receipt labels it builder-set.
-        Past runs keep the credit they already earned.
+        Past runs keep the time they already earned.
       </p>
 
       <CreditField

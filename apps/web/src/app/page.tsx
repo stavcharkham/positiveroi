@@ -192,7 +192,7 @@ function UndercountSection() {
         <Reveal delay={0.1}>
           <ReceiptReplay className="mx-auto w-full max-w-sm" />
           <p className="mx-auto mt-3 max-w-sm text-center font-mono text-xs text-foreground-muted">
-            the receipt every credited minute traces back to
+            the receipt every saved minute traces back to
           </p>
         </Reveal>
       </div>
@@ -324,7 +324,7 @@ function MultiplierSection() {
             {MULTIPLIER_HOURS_30D} hours in 30 days is a full-time job.
           </h2>
           <p className="mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-foreground-secondary">
-            Reach {MULTIPLIER_HOURS_30D} credited hours in a trailing 30 days,
+            Reach {MULTIPLIER_HOURS_30D} saved hours in a trailing 30 days,
             roughly 42 hours a week at the undercounted rate, and you have
             earned the Multiplier: your tools are doing a full-time job&rsquo;s
             worth of work. The window rolls and the ring decays honestly as

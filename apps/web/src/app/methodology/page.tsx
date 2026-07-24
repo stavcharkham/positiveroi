@@ -21,7 +21,7 @@ import { SiteHeader } from "../_marketing/site-header";
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "The Undercount: how PositiveROI credits time saved. Every claim takes a 40% trust cut, then a judgment cut when a person still checks, and every number drills down to its runs.",
+    "The Undercount: how PositiveROI counts time saved. Every claim takes a 40% trust cut, then a judgment cut when a person still checks, and every number drills down to its runs.",
 };
 
 const CONFIDENCE_CUT_PCT = Math.round((1 - CONSERVATISM_FACTOR) * 100);
@@ -74,8 +74,7 @@ export default function MethodologyPage() {
             numbers? Take the lower one.
           </p>
           <p>
-            That baseline then takes two cuts before a single minute is
-            credited:
+            That baseline then takes two cuts before a single minute counts:
           </p>
           <ol className="space-y-4">
             <li className="rounded-lg border border-border bg-surface p-4 shadow-xs">
@@ -86,7 +85,7 @@ export default function MethodologyPage() {
                 <strong className="font-semibold text-foreground">
                   The trust cut.
                 </strong>{" "}
-                Only {CREDITED_PCT}% of the baseline is credited. This absorbs
+                Only {CREDITED_PCT}% of the baseline counts. This absorbs
                 estimation optimism, the runs that partially fail, and the
                 overhead the estimate forgot.
               </p>
@@ -98,8 +97,9 @@ export default function MethodologyPage() {
                   The judgment cut.
                 </strong>{" "}
                 If a person still makes a real decision in the task
-                (reviewing, approving, editing before send), credit is halved
-                again. The tool did not remove the work; it removed part of it.
+                (reviewing, approving, editing before send), the saved time
+                is halved again. The tool did not remove the work; it removed
+                part of it.
               </p>
             </li>
           </ol>
@@ -111,7 +111,7 @@ export default function MethodologyPage() {
           </p>
           <Receipt rawMinutes={45} highJudgment className="my-2" />
           <p>
-            The tool gets credit for 13.5 of the 45 minutes claimed. The
+            The tool is counted as saving 13.5 of the 45 minutes claimed. The
             receipt above appears wherever that number appears.
           </p>
           <Aside>
@@ -140,7 +140,7 @@ export default function MethodologyPage() {
                 Minutes are estimates, and labeled as such.
               </strong>{" "}
               Every hours figure carries an <UndercountedTag /> tag. The
-              headline framing is always measured runs × credited minutes per
+              headline framing is always measured runs × saved minutes per
               run.
             </li>
             <li>
@@ -157,7 +157,7 @@ export default function MethodologyPage() {
         <Section n="04" title="The Multiplier">
           <p>
             <strong className="font-semibold text-foreground">
-              {MULTIPLIER_HOURS_30D} credited hours in a trailing{" "}
+              {MULTIPLIER_HOURS_30D} saved hours in a trailing{" "}
               {TRAILING_WINDOW_DAYS} days equals one full-time job.
             </strong>{" "}
             That is roughly 42 hours a week after the two cuts have already
@@ -174,15 +174,15 @@ export default function MethodologyPage() {
             {DAYS_PER_MONTH}-day average month:
           </p>
           <Formula>
-            fte_equivalent = credited_hours / ({MULTIPLIER_HOURS_30D} ×
+            fte_equivalent = saved_hours / ({MULTIPLIER_HOURS_30D} ×
             period_days / {DAYS_PER_MONTH})
           </Formula>
           <p>
-            So 360 credited hours over a 91-day quarter is about 0.67 FTE, not
+            So 360 saved hours over a 91-day quarter is about 0.67 FTE, not
             2.
           </p>
           <p>
-            Money value is the simplest possible conversion: credited hours ×
+            Money value is the simplest possible conversion: saved hours ×
             the workspace hourly rate (default $60/hour, editable by admins,
             shown next to the number). It is presented as secondary, because
             the rate is the one input PositiveROI does not measure.
@@ -193,11 +193,11 @@ export default function MethodologyPage() {
           <p>
             The Undercount is what every tool starts with, and what most tools
             keep. But the builder knows their tool better than a formula does,
-            so the final credited minutes per run is editable — in the
+            so the final saved minutes per run is editable — in the
             registration wizard and later on the tool&apos;s settings tab.
           </p>
           <p>
-            Transparency replaces the lock: a credit that differs from the
+            Transparency replaces the lock: a number that differs from the
             suggestion is labeled <em>builder-set</em> on every receipt and
             drill-down, next to the suggestion it replaced, and every change is
             audited — who, when, old, new. Only the dashboard can set it; tools
@@ -221,7 +221,7 @@ export default function MethodologyPage() {
 
         <Section n="07" title="Caps and audits">
           <p>
-            An ingest call may override the per-run credit downward, for
+            An ingest call may override the per-run saved time downward, for
             example when a run only did half the job. The override is clamped
             server-side to the range [0, baseline]. It can reduce credit; it
             can never raise it. There is no API path to inflate a run.

@@ -38,7 +38,7 @@ export default async function InvitePage({
             <p className="mt-1.5 text-sm leading-relaxed text-foreground-secondary">
               {invite.alreadyMember
                 ? "You are already a member of this workspace."
-                : `You've been invited as a ${invite.role}. Your runs and credited time will appear on this workspace's dashboards.`}
+                : `You've been invited as a ${invite.role}. Your runs and saved time will appear on this workspace's dashboards.`}
             </p>
             {invite.alreadyMember ? (
               <Button asChild className="mt-5 w-full">
@@ -48,7 +48,7 @@ export default async function InvitePage({
               <form action={acceptInviteAction.bind(null, token)}>
                 <fieldset className="mt-5 text-left">
                   <legend className="text-[0.8125rem] font-medium text-foreground">
-                    How do you build? (optional)
+                    Are you a technical or a non-technical builder? (optional)
                   </legend>
                   <div className="mt-2 grid gap-2">
                     {BUILDER_TYPES.map((option) => (

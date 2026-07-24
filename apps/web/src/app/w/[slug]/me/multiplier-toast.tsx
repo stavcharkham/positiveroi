@@ -16,7 +16,7 @@ function MultiplierToast({ newlyAwarded }: { newlyAwarded: boolean }) {
     fired.current = true;
     toast.success("You're a Multiplier", {
       description:
-        "180 credited hours in 30 days — a full-time job's worth of saved time. The badge is permanent.",
+        "180 saved hours in 30 days — a full-time job's worth of saved time. The badge is permanent.",
       duration: 8000,
     });
   }, [newlyAwarded]);

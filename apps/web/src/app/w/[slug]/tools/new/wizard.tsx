@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CutExplainer } from "@/components/product/cut-explainer";
 import { ReceiptFlow } from "@/components/product/receipt-flow";
 import { onboardingKeySlot } from "@/lib/profile";
 import { cn } from "@/lib/utils";
@@ -45,7 +46,7 @@ const TYPE_ICONS: Record<ToolType, React.ComponentType<{ className?: string }>> 
   app: AppWindow,
 };
 
-const STEP_TITLES = ["What is it", "Time by hand", "Your number", "Connect it"] as const;
+const STEP_TITLES = ["What is it", "Before this tool", "Time saved", "Connect it"] as const;
 
 export interface ToolWizardProps {
   workspaceSlug: string;
@@ -72,6 +73,8 @@ function ToolWizard({
   onboarding = false,
 }: ToolWizardProps) {
   const [step, setStep] = React.useState(0);
+  // Onboarding gets an opening moment before the four steps.
+  const [intro, setIntro] = React.useState(onboarding);
   // The onboarding flow parks the fresh ingest key in sessionStorage so it
   // survives the redirect without ever touching a URL. Read when the tool
   // is created (a click, safely post-hydration) — it is only shown on the
@@ -153,6 +156,32 @@ function ToolWizard({
     } finally {
       setCreating(false);
     }
+  }
+
+  if (intro) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+        >
+          <p className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-foreground-muted">
+            Your workspace is ready
+          </p>
+          <h1 className="numeral mt-3 text-4xl text-foreground">
+            Let&apos;s connect your first tool
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-foreground-secondary">
+            Name it, tell us the time it saves, and watch the first run land
+            on your dashboard. About two minutes.
+          </p>
+          <Button className="mt-6" onClick={() => setIntro(false)} autoFocus>
+            Let&apos;s go <ArrowRight aria-hidden />
+          </Button>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -356,12 +385,12 @@ function WhatIsItStep({
               </SelectContent>
             </Select>
             <p className="text-xs text-foreground-muted">
-              The owner gets credit for this tool&apos;s hours.
+              This tool&apos;s saved hours count toward the owner.
             </p>
           </div>
         ) : (
           <p className="text-xs text-foreground-muted">
-            Owner: {self.name}. You get credit for this tool&apos;s hours.
+            Owner: {self.name}. This tool&apos;s saved hours count toward you.
           </p>
         )}
 
@@ -440,7 +469,7 @@ function BaselineStep({
   return (
     <div className="rounded-lg border border-border bg-surface p-6 shadow-xs">
       <h2 className="text-[0.9375rem] font-semibold text-foreground">
-        Before this tool, how long did this take by hand, each time?
+        How much time did this task take before this tool, each time?
       </h2>
       <p className="mt-1 text-sm text-foreground-secondary">
         One honest number, in minutes. Watch what happens to it on your receipt.
@@ -509,8 +538,8 @@ function CutsStep({
         Does a person still check each run?
       </h2>
       <p className="mt-1 text-sm text-foreground-secondary">
-        If someone still reviews, edits, or approves what comes out, we halve
-        the credit.
+        If someone still reviews, edits, or approves what comes out, the
+        saved time is halved.
       </p>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
@@ -537,7 +566,7 @@ function CutsStep({
             ))}
           </ul>
           <span className="mt-2 block font-mono text-[0.6875rem] text-foreground-muted">
-            credit ÷ 2
+            saved time ÷ 2
           </span>
         </button>
 
@@ -565,17 +594,12 @@ function CutsStep({
         </button>
       </div>
 
-      <Link
-        href="/methodology"
-        className="mt-4 inline-block text-[0.8125rem] font-medium text-accent hover:underline"
-      >
-        How the cut works
-      </Link>
+      <CutExplainer className="mt-4 inline-block text-[0.8125rem]" />
 
       {suggested !== null && (
         <div className="mt-5 border-t border-border pt-5">
           <h3 className="text-[0.9375rem] font-semibold text-foreground">
-            Your credited minutes per run
+            Your time saved per run
           </h3>
           <p className="mt-1 text-sm text-foreground-secondary">
             We suggest {fmtNum(suggested)} min, the number on your receipt. If

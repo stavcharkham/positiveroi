@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   motion,
   useReducedMotion,
   useSpring,
   useTransform,
 } from "motion/react";
+import { CutExplainer } from "@/components/product/cut-explainer";
 import {
   fmtMinutes,
   receiptStages,
@@ -121,7 +121,7 @@ function ReceiptFlow({
       <div className="border-t border-dashed border-border px-4 py-3">
         <div className="flex items-baseline justify-between gap-4">
           <span className="text-[0.8125rem] font-medium text-foreground">
-            Credited, each run
+            Time saved, each run
           </span>
           <span className="numeral text-2xl leading-none text-accent">
             <AnimatedMinutes from={rawMinutes} to={credited} reduced={reduced} />
@@ -162,13 +162,11 @@ function ReceiptFlow({
                   </>
                 ) : (
                   <>
-                    You set this tool&apos;s credit to {fmtMinutes(credited)}{" "}
-                    min per run.
+                    You set this tool&apos;s saved time to{" "}
+                    {fmtMinutes(credited)} min per run.
                   </>
                 )}{" "}
-                <Link href="/methodology" className="text-accent hover:underline">
-                  How the cut works
-                </Link>
+                <CutExplainer className="text-xs" />
               </p>
             )}
           </>

@@ -19,7 +19,7 @@ function SampleDashboard({ workspaceSlug }: { workspaceSlug: string }) {
           <StatTile
             label="Multiplier equivalent"
             value="1.9"
-            sub="full-time jobs · 180 credited hrs/mo = 1 FTE"
+            sub="full-time jobs · 180 saved hrs/mo = 1 FTE"
           />
           <StatTile label="Value" value="$20,520" sub="at $60/hr" />
           <StatTile label="Runs measured" value="1,284" sub="4 builders active" />

@@ -154,7 +154,7 @@ export async function updateCreditAction(
   if (!parsed.success) {
     return {
       ok: false,
-      error: `The credit must be above 0 and at most ${RAW_ESTIMATE_MAX_DASHBOARD} minutes per run.`,
+      error: `The number must be above 0 and at most ${RAW_ESTIMATE_MAX_DASHBOARD} minutes per run.`,
     };
   }
 
@@ -170,7 +170,7 @@ export async function updateCreditAction(
   if (member.role === "builder" && tool.owner_id !== user.id) {
     return {
       ok: false,
-      error: "Only the tool's owner, a lead, or an admin can change its credit.",
+      error: "Only the tool's owner, a lead, or an admin can change its numbers.",
     };
   }
 
@@ -191,7 +191,7 @@ export async function updateCreditAction(
     .eq("workspace_id", workspace.id)
     .eq("id", toolId);
   if (updateError) {
-    return { ok: false, error: "Could not save the credit. Try again." };
+    return { ok: false, error: "Could not save. Try again." };
   }
 
   const { error: historyError } = await admin.from("credit_history").insert({
@@ -208,7 +208,7 @@ export async function updateCreditAction(
       .update({ minutes_saved_override: oldOverride })
       .eq("workspace_id", workspace.id)
       .eq("id", toolId);
-    return { ok: false, error: "Could not save the credit. Try again." };
+    return { ok: false, error: "Could not save. Try again." };
   }
 
   revalidatePath(`/w/${workspaceSlug}/tools/${toolId}`);

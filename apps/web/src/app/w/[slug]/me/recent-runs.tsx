@@ -113,7 +113,7 @@ function RunDetail({ run, workspaceSlug }: { run: RunRow; workspaceSlug: string 
             })}
           </span>
         </DetailRow>
-        <DetailRow label="Credited">
+        <DetailRow label="Time saved">
           {formatMinutes(run.minutes)} min
           {run.overridden && (
             <span className="ml-1.5 text-foreground-muted">(overridden on this run)</span>

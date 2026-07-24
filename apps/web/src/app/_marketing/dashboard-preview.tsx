@@ -75,7 +75,7 @@ function DashboardPreview({ className }: { className?: string }) {
                 <StatTile
                   label="Hours saved"
                   value="342"
-                  sub="180 credited hrs/mo = 1 FTE"
+                  sub="180 saved hrs/mo = 1 FTE"
                   undercounted
                   className="p-4"
                 />

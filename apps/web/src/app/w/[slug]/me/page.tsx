@@ -266,7 +266,7 @@ function ToolCard({
           </p>
           <p className="mt-0.5 text-xs text-foreground-muted">
             {TOOL_TYPE_LABEL[card.type]} · {formatMinutesPerRun(card.minutesPerRun)}{" "}
-            min/run credited
+            min/run saved
           </p>
         </div>
         <Badge variant={status.variant}>{status.label}</Badge>

@@ -56,24 +56,40 @@ function SnippetsPanel({
         <div>
           <CodeBlock code={ingestKey} caption="Your ingest key" />
           <p className="mt-1.5 text-xs leading-relaxed text-foreground-muted">
-            This key lets tools log runs to your workspace. Treat it like a
-            password — this is the only time it is shown. Lose it and you
-            create a new one in Settings → Keys.
+            Treat this like a password. It is shown only once, and it is
+            deliberately not in the prompt above. Set it where the tool runs
+            (as the{" "}
+            <code className="rounded bg-subtle px-1 py-0.5 font-mono text-[0.6875rem] text-foreground-secondary">
+              POSITIVEROI_API_KEY
+            </code>{" "}
+            environment variable, or pasted into the snippet yourself) and
+            never into an AI chat. Lose it and you create a new one in
+            Settings → Keys.
           </p>
         </div>
       )}
 
-      <details className="group">
-        <summary className="cursor-pointer list-none text-[0.8125rem] font-medium text-accent hover:underline">
-          <span className="group-open:hidden">Wiring it by hand? Show the code</span>
-          <span className="hidden group-open:inline">Hide the code</span>
-        </summary>
-        <div className="mt-3 space-y-4">
+      {type === "skill" ? (
+        // For skills the plugin IS the capture — its commands stay visible,
+        // never folded behind a toggle.
+        <div className="space-y-4">
           {snippets.map((snippet) => (
             <CodeBlock key={snippet.label} code={snippet.code} caption={snippet.label} />
           ))}
         </div>
-      </details>
+      ) : (
+        <details className="group">
+          <summary className="cursor-pointer list-none text-[0.8125rem] font-medium text-accent hover:underline">
+            <span className="group-open:hidden">Wiring it by hand? Show the code</span>
+            <span className="hidden group-open:inline">Hide the code</span>
+          </summary>
+          <div className="mt-3 space-y-4">
+            {snippets.map((snippet) => (
+              <CodeBlock key={snippet.label} code={snippet.code} caption={snippet.label} />
+            ))}
+          </div>
+        </details>
+      )}
 
       {needsKey && (
         <p className="text-xs leading-relaxed text-foreground-muted">

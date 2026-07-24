@@ -118,7 +118,7 @@ export default async function BuildersPage({
     <>
       <PageHeader
         title="Builders"
-        description={`Everyone whose tools credited time ${label}. Tiers follow the trailing 30 days.`}
+        description={`Everyone whose tools saved time ${label}. Tiers follow the trailing 30 days.`}
       />
 
       {rows.length === 0 ? (

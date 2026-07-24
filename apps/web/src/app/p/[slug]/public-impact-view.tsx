@@ -100,7 +100,7 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
             <UndercountedTag className="mt-0.5" />
             <p className="max-w-lg text-sm leading-relaxed text-foreground-secondary">
               Every run is measured. The minutes are deliberately conservative:
-              each claimed baseline takes a 40% trust cut, then credit is
+              each claimed baseline takes a 40% trust cut, then the number is
               halved again when a human decision stays in the loop.
             </p>
           </div>
@@ -128,7 +128,7 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
         <section className="mt-12" aria-label="Weekly trend">
           <div className="flex items-baseline justify-between gap-4">
             <h2 className="text-sm font-semibold text-foreground">
-              Credited hours per week
+              Hours saved per week
             </h2>
             <span className="font-mono text-[0.6875rem] text-foreground-muted">
               last 13 weeks
@@ -140,7 +140,7 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
               width={640}
               height={120}
               className="h-auto w-full"
-              aria-label="Credited hours saved per week over the trailing 90 days"
+              aria-label="Hours saved per week over the trailing 90 days"
             />
           </div>
         </section>

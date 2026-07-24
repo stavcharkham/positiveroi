@@ -2,9 +2,9 @@
 
 Build order follows [docs/architecture.md](docs/architecture.md) §11. Phase 1 froze the contracts; Phase 2 runs as parallel tracks; Phase 3 is the integration gate before deploy.
 
-## State (updated 2026-07-24, end of session)
+## State (updated 2026-07-24, session 2 close)
 
-**Track G (first-run experience overhaul) is DONE**: all six tasks built, live-verified in the dev app, reviewed (6 findings, all fixed — includes an SSRF guard on the favicon fetch), and committed through `c3af27f`. Tests green: core 32, web 85 (7 live), sdk, mcp-server, plugin unchanged. Migration 0010 applied to prod (file + live). QA workspaces/users created during verification were deleted from the live DB. **Next:** Stav reviews the new flow hands-on (localhost, sign up with a fresh email), then production go/no-go. The 2026-07-11 preview deploy predates Track G — deploy a fresh preview or straight to production at launch. External-caller tests (Make) wait for the production URL.
+**LIVE: https://positiveroi-web.vercel.app** on Stav's personal Vercel (project `positiveroi-web`, imported from GitHub — every push to `main` auto-deploys to production; Stav accepted continuous deploy for beta). Tracks G + H + H2 all shipped: first-run overhaul, conservatism-cut vocabulary, deterministic agent logging, key-out-of-prompts. Smoke-tested live: pages, API auth, signed-in dashboard with real DB data, and a successful magic-link send after Stav added the redirect URLs. Stale Deep33 Vercel projects deleted by Stav. **Next:** Stav completes one real magic-link sign-in from his inbox; then post-launch items (demo workspace, README link, positiveroi.dev, Make end-to-end test against the live URL). Track I (sandbox/Cowork tracking) parked.
 
 ## Phase 0: prerequisites
 
@@ -109,9 +109,9 @@ Goal: skill runs made inside Cowork or other sandboxed environments count, with 
 ## Deploy (moved to Stav's personal Vercel, 2026-07-24)
 
 - [x] **Live at https://positiveroi-web.vercel.app** — Stav imported the GitHub repo into his personal Vercel (project `positiveroi-web`, root `apps/web`, env pasted from `.env.local` + `NEXT_PUBLIC_DEPLOYMENT=hosted`). Smoke-tested live: all public pages 200, new Track G/H copy serving, ingest API rejects unauthenticated calls, signed-in dashboard renders with real DB data (QA user, deleted after).
-- [ ] **Magic-link redirect**: add `https://positiveroi-web.vercel.app/**` to Supabase → Authentication → URL Configuration → Redirect URLs (and set Site URL to the same origin). Until then real sign-ins bounce.
-- [ ] **Decide the push-to-production model**: the GitHub import auto-deploys `main` to production. Either accept continuous deploy (fine in beta) or set the production branch to a separate branch so shipping stays deliberate.
-- [ ] **Delete the two stale Deep33 projects** (`positiveroi`, `positive-roi`) so nothing deploys to the wrong account again.
+- [x] **Magic-link redirect** configured by Stav; live send verified ("Check your email" on production, 2026-07-24). Final confirmation: Stav clicks the link in his inbox.
+- [x] **Push-to-production model**: Stav chose continuous deploy — every push to `main` goes live. Revisit when there are real users.
+- [x] Stale Deep33 projects deleted by Stav (2026-07-24).
 - [ ] Post-launch: seed demo workspace, link from README; buy positiveroi.dev and point it at the personal project.
 
 ## Deploy history (superseded)

@@ -4,6 +4,13 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Product decisions (Stav)
 
+**2026-07-24, launch**
+
+- **Hosting: Stav's personal Vercel account**, not Deep33. Project `positiveroi-web`, imported from GitHub by Stav; live at https://positiveroi-web.vercel.app. The two stale Deep33 projects were deleted.
+- **Continuous deploy accepted for beta**: every push to `main` goes straight to production. Revisit (separate production branch, preview gate) once there are real users.
+- Magic-link redirect URLs configured by Stav in Supabase; live send verified.
+
+
 **2026-07-24, third round (Track H follow-ups)**
 
 - **The 40% cut is named the "conservatism cut"** on every screen (was "trust cut", before that "confidence cut" internally).

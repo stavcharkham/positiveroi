@@ -2,6 +2,10 @@
 
 Nothing is blocking the release. Each item has the exact steps so it can be done in one sitting.
 
+## 0. Try the new first-run flow, then production go/no-go
+
+The onboarding + receipt + copy overhaul (Track G, 2026-07-24) is built and verified. To feel it yourself: open localhost:3000, sign up with a fresh email (magic link works on dev), and go through connecting a first tool. When you're happy: say "ship it" — the app will be deployed fresh (the July 11 preview predates these changes), smoke-tested, and promoted. Note for launch day: Make/external tools can only be tested against the production URL.
+
 ## 1. Google OAuth client (optional — deferred by Stav 2026-07-10)
 
 Magic-link login works without it. Steps preserved for later:

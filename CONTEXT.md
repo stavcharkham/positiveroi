@@ -39,7 +39,14 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Technical decisions (Claude)
 
-**2026-07-11, deep review pass**
+**2026-07-24, Track G build**
+
+- Receipt-flow stage math lives in `apps/web/src/lib/receipt-stages.ts` (pure, tested against the frozen core function); the animated `ReceiptFlow` component is wizard-only, the static `Receipt` stays for detail pages and docs. On-screen cut vocabulary is now "Trust cut −40%" / "A person still checks ÷2" everywhere; "The Undercount" survives only where it is introduced (methodology, marketing, the undercounted-tag popover).
+- Agent prompts (`agentPrompt` in `@positiveroi/core/snippets`) are the single source for the wizard, Setup tab, and docs; skill prompts route through the plugin (no endpoint inline), agent prompts through MCP.
+- Onboarding hands the fresh ingest key to the wizard via sessionStorage (`onboardingKeySlot`), never a URL; the wizard reads it on tool creation and the capture step clears it on any exit. Confetti = `canvas-confetti`, dynamically imported, skipped under reduced motion.
+- Company logo = the website's own `/favicon.ico`, fetched server-side at profile save with an SSRF guard (`lib/net-guard.ts`: https-only, default port, all resolved IPs public, no redirects). No third-party favicon services. Sites without a plain favicon.ico silently get no logo (v1 limitation; HTML `<link rel=icon>` parsing is a later improvement).
+- `hourly_rate_cents` null = unset (migration 0010 dropped default + not-null). Read API returns `money_value: null`; public page hides money; inline set-rate rejects empty submits (clearing is settings-only). Existing workspaces kept their old 6000 value.
+- Profile answers are a signal, never a gate: `saveWorkspaceProfileAction` failures don't block onboarding; builder type is per-member (invited members answer on the accept screen), website/size are workspace-level, admin-only.
 
 - Ran a 10-lens security + quality review (each finding verified by 3 adversarial skeptics): 32 real defects, all fixed. Notable: a backslash open-redirect in `safeNextPath`, no rate limit on `POST /api/v1/tools`, calendar-invalid custom date ranges crashing dashboards, and the SDK throwing on insecure-context browsers where `crypto.randomUUID` is undefined. Full list and the fix commit: `18ba492`.
 - Server actions across the app now wrap their awaited call in try/catch+finally — a rejected action (network blip) previously left the button spinning forever.

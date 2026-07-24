@@ -2,9 +2,9 @@
 
 Build order follows [docs/architecture.md](docs/architecture.md) §11. Phase 1 froze the contracts; Phase 2 runs as parallel tracks; Phase 3 is the integration gate before deploy.
 
-## State (updated 2026-07-24)
+## State (updated 2026-07-24, end of session)
 
-Build + deep review + integration gate done; preview deployed and smoke-tested 28/28 (2026-07-11). Production promotion still held for Stav's go. Stav's first hands-on test (2026-07-24, dev env) produced a product-review round: **Track G, first-run experience overhaul** — receipt comprehension, full copy pass, onboarding rebuild, agent prompts, optional hourly rate. Spec agreed, building now. External-caller tests (Make) wait for the production URL.
+**Track G (first-run experience overhaul) is DONE**: all six tasks built, live-verified in the dev app, reviewed (6 findings, all fixed — includes an SSRF guard on the favicon fetch), and committed through `c3af27f`. Tests green: core 32, web 85 (7 live), sdk, mcp-server, plugin unchanged. Migration 0010 applied to prod (file + live). QA workspaces/users created during verification were deleted from the live DB. **Next:** Stav reviews the new flow hands-on (localhost, sign up with a fresh email), then production go/no-go. The 2026-07-11 preview deploy predates Track G — deploy a fresh preview or straight to production at launch. External-caller tests (Make) wait for the production URL.
 
 ## Phase 0: prerequisites
 
@@ -78,14 +78,14 @@ Build + deep review + integration gate done; preview deployed and smoke-tested 2
 
 ## Track G: first-run experience overhaul (spec agreed 2026-07-24)
 
-Decisions in CONTEXT.md 2026-07-24. Order: receipt + copy first (everything inherits it), then schema, then onboarding, then prompts.
+Decisions in CONTEXT.md 2026-07-24. All six tasks done and live-verified; review round fixed 6 findings (commit c3af27f).
 
-- [ ] G1 Receipt as a flow: quiet until baseline entered, then animated claim → conservatism cut → credited/run; trust-first framing; credited number editable inline after the cut
-- [ ] G2 Copy pass, whole app: cold-read plain language, no internal vocabulary on screen, per-run framing kept, shorter than before
-- [ ] G3 Migration 0010: `workspaces.website`, `workspaces.company_size`, `workspaces.logo_url`, `members.builder_type`, `hourly_rate_cents` nullable (null = unset). File + applied to prod
-- [ ] G4 Hourly rate optional: out of every setup path; settings frames it as "convert hours to money"; dashboards lead with hours, money renders only when a rate is set, labeled estimate
-- [ ] G5 Agent prompts in the capture step for all builders: copy-paste prompt per tool type (Claude Code / Cursor / Codex), key in its own box with password-style subtext, plugin surfaced for skills, MCP for agents, code detail behind a toggle
-- [ ] G6 Onboarding rebuild: instant signup → company name + website (logo fetched from the site) + size (Just me / 2-10 / 11-50 / 51+) + builder type (kept as signal; UI same for both) → connect first tool (embedded capture with G5 prompts + inline key) → live wait → confetti + first receipt → tour (metrics, invite team, public page). Invited members get builder type only
+- [x] G1 Receipt as a flow: quiet until baseline entered, then animated claim → conservatism cut → credited/run; trust-first framing; credited number editable inline after the cut (commit 4fa6467)
+- [x] G2 Copy pass, whole app: cold-read plain language, no internal vocabulary on screen, per-run framing kept, shorter than before (commit f90ea6d)
+- [x] G3 Migration 0010: `workspaces.website`, `workspaces.company_size`, `workspaces.logo_url`, `members.builder_type`, `hourly_rate_cents` nullable (null = unset). File + applied to prod (commit f83518a)
+- [x] G4 Hourly rate optional: out of every setup path; settings frames it as "convert hours to money"; dashboards lead with hours, money renders only when a rate is set, labeled estimate (commit 07880e4)
+- [x] G5 Agent prompts in the capture step for all builders: copy-paste prompt per tool type (Claude Code / Cursor / Codex), key in its own box with password-style subtext, plugin surfaced for skills, MCP for agents, code detail behind a toggle (commit 2c4833d)
+- [x] G6 Onboarding rebuild: instant signup → company name + website (logo fetched from the site) + size (Just me / 2-10 / 11-50 / 51+) + builder type (kept as signal; UI same for both) → connect first tool (embedded capture with G5 prompts + inline key) → live wait → confetti + first receipt → tour (metrics, invite team, public page). Invited members get builder type only (commit 05eae8d)
 
 ## Deploy
 

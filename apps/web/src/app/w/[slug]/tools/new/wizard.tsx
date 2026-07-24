@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Receipt } from "@/components/product/receipt";
+import { ReceiptFlow } from "@/components/product/receipt-flow";
 import { cn } from "@/lib/utils";
 import { BaselineField } from "../baseline-field";
 import { CreditField } from "../credit-field";
@@ -224,21 +224,31 @@ function ToolWizard({
           )}
         </motion.div>
 
-        <aside className="lg:sticky lg:top-20 lg:self-start">
-          <Receipt
-            key={`${step === 2}-${highJudgment}`}
-            rawMinutes={rawMinutes}
-            highJudgment={highJudgment === true}
-            overrideMinutes={overrideForDisplay}
-            animate={step === 2}
-            closingLine={step >= 2 && highJudgment !== null}
-          />
-          <p className="mt-2.5 text-xs leading-relaxed text-foreground-muted">
-            {step < 2
-              ? "This receipt is the number your tool earns per run. It updates as you answer."
-              : "Every credited minute in the product traces back to this receipt."}
-          </p>
-        </aside>
+        {step >= 1 && (
+          <aside className="lg:sticky lg:top-20 lg:self-start">
+            <ReceiptFlow
+              key={`${step >= 2}-${highJudgment}`}
+              rawMinutes={rawMinutes}
+              highJudgment={step >= 2 ? highJudgment : null}
+              overrideMinutes={overrideForDisplay}
+              closingLine={step >= 2 && highJudgment !== null}
+              onAdjust={
+                step === 2 && highJudgment !== null
+                  ? () => {
+                      const el = document.getElementById("tool-credit");
+                      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+                      el?.focus({ preventScroll: true });
+                    }
+                  : undefined
+              }
+            />
+            <p className="mt-2.5 text-xs leading-relaxed text-foreground-muted">
+              {step < 2
+                ? "This receipt is what one run of your tool earns. It updates as you answer."
+                : "Every number on your dashboard traces back to a receipt like this."}
+            </p>
+          </aside>
+        )}
       </div>
     </div>
   );

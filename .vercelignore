@@ -1,0 +1,5 @@
+# Local caches that blow the upload size limit. Never ignore **/.next here —
+# it would also prune the cloud build's output (learned 2026-07-24).
+.turbo
+**/.next/dev
+.vercel

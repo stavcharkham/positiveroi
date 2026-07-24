@@ -2,9 +2,9 @@
 
 Build order follows [docs/architecture.md](docs/architecture.md) §11. Phase 1 froze the contracts; Phase 2 runs as parallel tracks; Phase 3 is the integration gate before deploy.
 
-## State (updated 2026-07-10)
+## State (updated 2026-07-24)
 
-Backend, frontend, and the review-round batch are all committed (latest `f3fc260`: builder-set credit, user-level keys, MCP `list_metrics`). Migrations 0001–0009 applied to the live Supabase project (`mzkvhihqykzeecbwoigu`); the service role key is in `.env.local`, so the full live suite runs. Tests green: core 27, web 60 (7 live), sdk 11, mcp-server 19, plugin 10. **Next:** the time-ranges change (rename quarter → last 90 days, add custom from/to picker — decided 2026-07-10), then a full code review, then the integration gate, then deploy.
+Build + deep review + integration gate done; preview deployed and smoke-tested 28/28 (2026-07-11). Production promotion still held for Stav's go. Stav's first hands-on test (2026-07-24, dev env) produced a product-review round: **Track G, first-run experience overhaul** — receipt comprehension, full copy pass, onboarding rebuild, agent prompts, optional hourly rate. Spec agreed, building now. External-caller tests (Make) wait for the production URL.
 
 ## Phase 0: prerequisites
 
@@ -75,6 +75,17 @@ Backend, frontend, and the review-round batch are all committed (latest `f3fc260
 - [x] G4 SDK path: browser-origin `logRun()` lands `via sdk`; CORS ACAO on preflight + response
 - [x] G5 Scopes: read key gets `/stats` (200), ingest key 403 on `/stats` + 200 on `/summary`, unknown key 401
 - [~] G6 CI: the two required jobs (lint/typecheck/test/build, plugin) are green; the optional `db` job (RLS-isolation / migration-from-zero, `continue-on-error`) still fails at the local-stack test step — brittle env, documented TODO. Migrations are separately proven: all 0001–0009 applied cleanly to the live project; the live suite passes locally (7/7).
+
+## Track G: first-run experience overhaul (spec agreed 2026-07-24)
+
+Decisions in CONTEXT.md 2026-07-24. Order: receipt + copy first (everything inherits it), then schema, then onboarding, then prompts.
+
+- [ ] G1 Receipt as a flow: quiet until baseline entered, then animated claim → conservatism cut → credited/run; trust-first framing; credited number editable inline after the cut
+- [ ] G2 Copy pass, whole app: cold-read plain language, no internal vocabulary on screen, per-run framing kept, shorter than before
+- [ ] G3 Migration 0010: `workspaces.website`, `workspaces.company_size`, `workspaces.logo_url`, `members.builder_type`, `hourly_rate_cents` nullable (null = unset). File + applied to prod
+- [ ] G4 Hourly rate optional: out of every setup path; settings frames it as "convert hours to money"; dashboards lead with hours, money renders only when a rate is set, labeled estimate
+- [ ] G5 Agent prompts in the capture step for all builders: copy-paste prompt per tool type (Claude Code / Cursor / Codex), key in its own box with password-style subtext, plugin surfaced for skills, MCP for agents, code detail behind a toggle
+- [ ] G6 Onboarding rebuild: instant signup → company name + website (logo fetched from the site) + size (Just me / 2-10 / 11-50 / 51+) + builder type (kept as signal; UI same for both) → connect first tool (embedded capture with G5 prompts + inline key) → live wait → confetti + first receipt → tour (metrics, invite team, public page). Invited members get builder type only
 
 ## Deploy
 

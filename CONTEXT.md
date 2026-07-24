@@ -4,7 +4,15 @@ Started 2026-07-08. Product decisions are Stav's; technical decisions are Claude
 
 ## Product decisions (Stav)
 
-**2026-07-10** (first product review of the built app)
+**2026-07-24** (first hands-on test, dev env → Track G)
+
+- **Hourly rate is optional and lives in settings**, framed as "convert hours to money". Out of every setup path. Dashboards lead with hours; money shows only when a rate is set, labeled as an estimate. No per-builder rates (salary proxy).
+- **Onboarding rebuilt around first-run-as-first-success**: instant signup, then company name + website (logo pulled from the site) + company size (Just me / 2-10 / 11-50 / 51+) + builder type (non-technical / technical — kept as a signal even though both see the same UI; everyone builds with AI coding tools, Make/Zapier de-emphasized), then connect-first-tool, live wait, confetti (whimsical), then the tour. Invites come after the first success, not before.
+- **API key appears inside the connect step**, its own box near the prompt, password-style subtext. Never a standalone screen.
+- **The receipt is a flow, not a table**: nothing shows until the builder enters their by-hand time, then the cut plays visually. Framing is trust-first: trust is everything when measuring your own tools, so a conservatism formula is applied — the visual explains it. The credited number is easily editable right after the cut.
+- **Agent prompts lead capture for every builder type**: copy-paste prompts for Claude Code / Cursor / Codex per tool type, explaining most inline and linking docs. The existing plugin and MCP server get surfaced to everyone; raw code detail no longer leads.
+- **Whole-app copy pass**: plain, human, first-time-comprehensible, concise; internal vocabulary stays internal; per-run framing kept ("How long did this take by hand, each time?").
+- **Make/external-caller testing waits for the production URL** (cloud services can't reach localhost; tunnels rejected in favor of the real thing).
 
 - **The credited number is editable, fully free within the schema ceiling.** The Undercount becomes the suggested default with its rationale shown; the builder sets the final minutes/run at registration and later in the dashboard. Numbers differing from the suggestion are labeled "builder-set" on receipts and drill-downs — transparency replaces the lock. The 480-min ceiling (one 8h workday per run) stays as a typo/abuse bound, not a distrust of builders; raise it later if a real multi-day-per-run case appears. The suggested-value math (constants, generated column, round-trip test) stays frozen.
 - **API keys are user-level.** Every member creates and revokes their own keys; admins see all. Offboarding = revoke that person's keys; nobody else rotates anything. Read-scope key creation stays admin-only (read keys expose company-wide data).

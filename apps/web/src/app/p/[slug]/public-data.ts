@@ -59,7 +59,10 @@ export async function getPublicImpactData(
     runs: stats.runs,
     builders: stats.builders,
     multipliers,
-    money: Math.round((stats.hours * workspace.hourly_rate_cents) / 100),
+    money:
+      workspace.hourly_rate_cents === null
+        ? null
+        : Math.round((stats.hours * workspace.hourly_rate_cents) / 100),
     trend: weeklyMinutes.map((m) => Math.round((m / 60) * 10) / 10),
     topTools: boards.tools
       .slice(0, 5)

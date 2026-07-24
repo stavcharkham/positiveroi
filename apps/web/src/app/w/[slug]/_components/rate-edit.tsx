@@ -23,11 +23,14 @@ function RateEdit({
   currency,
 }: {
   workspaceSlug: string;
-  hourlyRateCents: number;
+  /** null = no rate set yet — the trigger reads "set rate". */
+  hourlyRateCents: number | null;
   currency: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState(String(hourlyRateCents / 100));
+  const [value, setValue] = React.useState(
+    hourlyRateCents === null ? "" : String(hourlyRateCents / 100),
+  );
   const [saving, setSaving] = React.useState(false);
 
   async function save(e: React.FormEvent) {
@@ -54,7 +57,7 @@ function RateEdit({
         aria-label="Edit hourly rate"
       >
         <Pencil className="size-3" aria-hidden />
-        edit rate
+        {hourlyRateCents === null ? "set rate" : "edit rate"}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64">
         <form onSubmit={save} className="flex flex-col gap-3">

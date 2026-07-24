@@ -55,6 +55,8 @@ curl -H "Authorization: Bearer roi_read_YOUR_KEY" \
 
 `fte_equivalent` is pro-rated: `hours / (180 × period_days / 30.44)`. See [the methodology](../methodology.md#the-fte-math).
 
+`money_value` is `null` when the workspace has no hourly rate set (the rate is optional; dashboards then show hours only).
+
 ## GET /api/v1/timeseries
 
 Bucketed series for charts.

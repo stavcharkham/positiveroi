@@ -85,7 +85,10 @@ export default async function CompanyDashboardPage({
   const base = `/w/${slug}`;
   const label = periodLabel(periodName);
   const fte = fteEquivalent(stats.hours, period.periodDays);
-  const money = moneyValueCents(stats.hours, workspace.hourly_rate_cents);
+  const money =
+    workspace.hourly_rate_cents === null
+      ? 0
+      : moneyValueCents(stats.hours, workspace.hourly_rate_cents);
   const points = zeroFillSeries(series, bucket, period).map((b) => ({
     start: b.start,
     hours: Math.round((b.minutes / 60) * 100) / 100,
@@ -124,22 +127,39 @@ export default async function CompanyDashboardPage({
           value={formatFte(fte)}
           sub={`full-time jobs · ${MULTIPLIER_HOURS_30D} credited hrs/mo = 1 FTE`}
         />
-        <HeadlineTile
-          href={withPeriod(`${base}/tools`, periodName)}
-          drillLabel="See the tools behind the value"
-          label="Value"
-          value={formatMoneyCents(money, workspace.currency)}
-          sub={`at ${formatMoneyCents(workspace.hourly_rate_cents, workspace.currency)}/hr`}
-          action={
-            isAdmin ? (
+        {workspace.hourly_rate_cents !== null ? (
+          <HeadlineTile
+            href={withPeriod(`${base}/tools`, periodName)}
+            drillLabel="See the tools behind the value"
+            label="Value"
+            value={formatMoneyCents(money, workspace.currency)}
+            sub={`at ${formatMoneyCents(workspace.hourly_rate_cents, workspace.currency)}/hr · estimate`}
+            action={
+              isAdmin ? (
+                <RateEdit
+                  workspaceSlug={slug}
+                  hourlyRateCents={workspace.hourly_rate_cents}
+                  currency={workspace.currency}
+                />
+              ) : undefined
+            }
+          />
+        ) : isAdmin ? (
+          <HeadlineTile
+            href={`${base}/settings`}
+            drillLabel="Set the hourly rate in settings"
+            label="Value"
+            value="—"
+            sub="Set an hourly rate to turn hours into money"
+            action={
               <RateEdit
                 workspaceSlug={slug}
-                hourlyRateCents={workspace.hourly_rate_cents}
+                hourlyRateCents={null}
                 currency={workspace.currency}
               />
-            ) : undefined
-          }
-        />
+            }
+          />
+        ) : null}
         <HeadlineTile
           href={withPeriod(`${base}/tools`, periodName)}
           drillLabel="See the runs behind this number"

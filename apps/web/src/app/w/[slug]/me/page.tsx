@@ -75,7 +75,10 @@ export default async function BuilderDashboardPage({
   const mine = boards.builders.find((b) => b.userId === user.id);
   const myHours = mine?.hours ?? 0;
   const myRuns = mine?.runs ?? 0;
-  const money = moneyValueCents(myHours, workspace.hourly_rate_cents);
+  const money =
+    workspace.hourly_rate_cents === null
+      ? null
+      : moneyValueCents(myHours, workspace.hourly_rate_cents);
   const toolIds = tools.map((t) => t.id);
   const periodToolTotals = new Map(
     boards.tools.map((t) => [t.toolId, { hours: t.hours, runs: t.runs }]),
@@ -141,13 +144,15 @@ export default async function BuilderDashboardPage({
               </TooltipContent>
             )}
           </Tooltip>
-          <HeadlineTile
-            href="#my-tools"
-            drillLabel="See the tools behind the money"
-            label="Money saved"
-            value={formatMoneyCents(money, workspace.currency)}
-            sub={`at ${formatMoneyCents(workspace.hourly_rate_cents, workspace.currency)}/hr`}
-          />
+          {money !== null && workspace.hourly_rate_cents !== null && (
+            <HeadlineTile
+              href="#my-tools"
+              drillLabel="See the tools behind the money"
+              label="Money saved"
+              value={formatMoneyCents(money, workspace.currency)}
+              sub={`at ${formatMoneyCents(workspace.hourly_rate_cents, workspace.currency)}/hr · estimate`}
+            />
+          )}
         </div>
 
         <Card>

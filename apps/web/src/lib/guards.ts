@@ -21,7 +21,8 @@ export interface WorkspaceRow {
   name: string;
   slug: string;
   timezone: string;
-  hourly_rate_cents: number;
+  /** null = no rate set; dashboards show hours only. */
+  hourly_rate_cents: number | null;
   currency: string;
   public_enabled: boolean;
   public_slug: string | null;

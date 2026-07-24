@@ -24,7 +24,8 @@ import { updateWorkspaceSettingsAction } from "./actions";
 
 export interface GeneralFormInitial {
   name: string;
-  hourlyRateDollars: number;
+  /** null = no rate set; dashboards show hours only. */
+  hourlyRateDollars: number | null;
   currency: string;
   timezone: string;
 }
@@ -47,9 +48,10 @@ function GeneralForm({
     setError(null);
     const form = new FormData(e.currentTarget);
     try {
+      const rateRaw = String(form.get("rate") ?? "").trim();
       const result = await updateWorkspaceSettingsAction(slug, {
         name: String(form.get("name") ?? ""),
-        hourlyRateDollars: Number(form.get("rate") ?? 0),
+        hourlyRateDollars: rateRaw === "" ? null : Number(rateRaw),
         currency: String(form.get("currency") ?? ""),
         timezone,
       });
@@ -71,7 +73,8 @@ function GeneralForm({
       <CardHeader>
         <CardTitle>Workspace</CardTitle>
         <CardDescription>
-          Name, money math, and the timezone your calendar ranges use.
+          Name, the optional hours-to-money rate, and the timezone your
+          calendar ranges use.
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
@@ -89,7 +92,7 @@ function GeneralForm({
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="rate">Hourly rate</Label>
+              <Label htmlFor="rate">Hourly rate (optional)</Label>
               <Input
                 id="rate"
                 name="rate"
@@ -97,11 +100,12 @@ function GeneralForm({
                 min={0}
                 max={1_000_000}
                 step="0.01"
-                required
-                defaultValue={initial.hourlyRateDollars}
+                placeholder="60"
+                defaultValue={initial.hourlyRateDollars ?? ""}
               />
               <p className="text-xs text-foreground-muted">
-                Hours times rate is every money figure, past and future.
+                Turns saved hours into money on dashboards, as an estimate.
+                Leave empty to show hours only.
               </p>
             </div>
             <div className="space-y-1.5">

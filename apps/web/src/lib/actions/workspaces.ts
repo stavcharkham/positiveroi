@@ -1,11 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import {
-  DEFAULT_CURRENCY,
-  DEFAULT_HOURLY_RATE_CENTS,
-  SEEDED_METRICS,
-} from "@positiveroi/core";
+import { DEFAULT_CURRENCY, SEEDED_METRICS } from "@positiveroi/core";
 import { generateApiKey } from "@/lib/api-keys";
 import { requireUser } from "@/lib/guards";
 import { getAdminClient } from "@/lib/supabase/admin";
@@ -20,7 +16,6 @@ import { getAdminClient } from "@/lib/supabase/admin";
 const createWorkspaceSchema = z.object({
   name: z.string().trim().min(1).max(80),
   displayName: z.string().trim().min(1).max(60),
-  hourlyRateDollars: z.coerce.number().min(0).max(1_000_000),
   timezone: z.string().trim().max(60).optional(),
 });
 
@@ -41,9 +36,8 @@ export async function createWorkspaceAction(
   if (!parsed.success) {
     return { ok: false, error: "Check the form — something is missing or out of range." };
   }
-  const { name, displayName, hourlyRateDollars } = parsed.data;
+  const { name, displayName } = parsed.data;
   const timezone = validTimezone(parsed.data.timezone) ?? "UTC";
-  const hourlyRateCents = Math.round(hourlyRateDollars * 100) || DEFAULT_HOURLY_RATE_CENTS;
 
   const admin = getAdminClient();
 
@@ -58,7 +52,6 @@ export async function createWorkspaceAction(
         name,
         slug,
         timezone,
-        hourly_rate_cents: hourlyRateCents,
         currency: DEFAULT_CURRENCY,
       })
       .select("id, slug")

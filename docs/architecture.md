@@ -422,7 +422,7 @@ Rules: `raw_estimate_minutes <= 120` on this path (hard 422 above); owner = key 
 
 ### Read — scope `read` only
 
-- **`GET /api/v1/stats?period=week|month|quarter`** or `?from=YYYY-MM-DD&to=YYYY-MM-DD` (dates in workspace TZ; omit = all-time) → `{ range, runs, minutes_saved, hours_saved, fte_equivalent, money_value: {amount, currency, hourly_rate}, active_tools, builders, methodology: "measured runs x conservative estimated minutes per run" }`. FTE = `hours / (180 * period_days / 30.44)`.
+- **`GET /api/v1/stats?period=week|month|quarter`** or `?from=YYYY-MM-DD&to=YYYY-MM-DD` (dates in workspace TZ; omit = all-time) → `{ range, runs, minutes_saved, hours_saved, fte_equivalent, money_value: {amount, currency, hourly_rate} | null (no rate set), active_tools, builders, methodology: "measured runs x conservative estimated minutes per run" }`. FTE = `hours / (180 * period_days / 30.44)`.
 - **`GET /api/v1/timeseries?bucket=day|week|month&from&to&tool={slug}&metric={key}`** → `{ "buckets": [ { "start", "runs", "minutes_saved", "metric_value" } ] }` (bucketed in workspace TZ).
 - **`GET /api/v1/metrics?from&to`** → totals per metric definition.
 

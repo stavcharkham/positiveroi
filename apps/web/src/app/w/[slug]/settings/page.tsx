@@ -27,7 +27,10 @@ export default async function GeneralSettingsPage({
         slug={slug}
         initial={{
           name: workspace.name,
-          hourlyRateDollars: workspace.hourly_rate_cents / 100,
+          hourlyRateDollars:
+            workspace.hourly_rate_cents === null
+              ? null
+              : workspace.hourly_rate_cents / 100,
           currency: workspace.currency.trim(),
           timezone: workspace.timezone,
         }}

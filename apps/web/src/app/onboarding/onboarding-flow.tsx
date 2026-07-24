@@ -81,7 +81,6 @@ function CreateStep({
     const result = await createWorkspaceAction({
       name: String(form.get("name") ?? ""),
       displayName: String(form.get("displayName") ?? ""),
-      hourlyRateDollars: Number(form.get("rate") ?? 60),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     if (result.ok && result.slug && result.ingestKey) {
@@ -113,21 +112,6 @@ function CreateStep({
             placeholder="Dana Levi"
             autoComplete="name"
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="rate">Hourly rate (USD)</Label>
-          <Input
-            id="rate"
-            name="rate"
-            type="number"
-            min={0}
-            max={1000000}
-            step={1}
-            defaultValue={60}
-          />
-          <p className="text-xs text-foreground-muted">
-            Used to convert hours to money. Changeable anytime.
-          </p>
         </div>
         {error && <p className="text-[0.8125rem] text-destructive">{error}</p>}
         <Button type="submit" className="w-full" disabled={pending}>

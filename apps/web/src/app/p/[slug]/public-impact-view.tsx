@@ -21,8 +21,8 @@ export interface PublicImpactData {
   runs: number;
   builders: number;
   multipliers: number;
-  /** Whole currency units: credited hours × workspace rate. */
-  money: number;
+  /** Whole currency units: credited hours × workspace rate; null = no rate set. */
+  money: number | null;
   /** Weekly credited hours, oldest bucket first. */
   trend: number[];
   /** Top tools by credited hours — names and hours only. */
@@ -61,7 +61,7 @@ function PublicImpactView({ data, config, className }: PublicImpactViewProps) {
       { label: "Multipliers earned", value: formatCount(data.multipliers) },
     );
   }
-  if (config.show_money) {
+  if (config.show_money && data.money !== null) {
     stats.push({
       label: "Value created",
       value: formatMoney(data.money, data.currency),

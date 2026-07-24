@@ -9,7 +9,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 
 const settingsSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  hourlyRateDollars: z.coerce.number().min(0).max(1_000_000),
+  hourlyRateDollars: z.coerce.number().min(0).max(1_000_000).nullable(),
   currency: z
     .string()
     .trim()
@@ -46,7 +46,10 @@ export async function updateWorkspaceSettingsAction(
     .from("workspaces")
     .update({
       name: parsed.data.name,
-      hourly_rate_cents: Math.round(parsed.data.hourlyRateDollars * 100),
+      hourly_rate_cents:
+        parsed.data.hourlyRateDollars === null
+          ? null
+          : Math.round(parsed.data.hourlyRateDollars * 100),
       currency: parsed.data.currency,
       timezone: parsed.data.timezone,
     })

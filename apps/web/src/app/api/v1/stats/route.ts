@@ -58,7 +58,17 @@ export async function GET(request: NextRequest) {
     }
 
     const stats = await workspaceStats(key.workspaceId, period);
-    const cents = moneyValueCents(stats.hours, workspace.hourly_rate_cents);
+    // money_value is null when the workspace has no hourly rate set.
+    const moneyValue =
+      workspace.hourly_rate_cents === null
+        ? null
+        : {
+            amount: round2(
+              moneyValueCents(stats.hours, workspace.hourly_rate_cents) / 100,
+            ),
+            currency: workspace.currency,
+            hourly_rate: round2(workspace.hourly_rate_cents / 100),
+          };
 
     return Response.json(
       {
@@ -70,11 +80,7 @@ export async function GET(request: NextRequest) {
         minutes_saved: stats.minutes,
         hours_saved: stats.hours,
         fte_equivalent: round2(fteEquivalent(stats.hours, period.periodDays)),
-        money_value: {
-          amount: round2(cents / 100),
-          currency: workspace.currency,
-          hourly_rate: round2(workspace.hourly_rate_cents / 100),
-        },
+        money_value: moneyValue,
         active_tools: stats.activeTools,
         builders: stats.builders,
         methodology: METHODOLOGY.description,
